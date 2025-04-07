@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Copy, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import WebsiteSearch from "@/components/WebsiteSearch"; // Import website search
+import WebsiteSearch from "@/components/WebsiteSearch";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner"; 
 
 interface Service {
     name: string;
@@ -22,8 +24,8 @@ export default function AddPassword() {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [notes, setNotes] = useState("");
 
-    // Generate a random password
     const generatePassword = () => {
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
         let newPassword = "";
@@ -31,37 +33,51 @@ export default function AddPassword() {
             newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         setPassword(newPassword);
+        toast("Password generated");
     };
 
-    // Copy password to clipboard
     const copyToClipboard = () => {
         navigator.clipboard.writeText(password);
         setCopied(true);
+        toast.success("Copied to clipboard");
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // Save password
     const savePassword = async () => {
-        if (!selectedService || !password) return;
-        setLoading(true);
+        if (!selectedService || !password) {
+            toast.warning("Please select a service and enter a password");
+            return;
+        }
 
+        setLoading(true);
         try {
             const token = await getToken();
             await axios.post(
                 "http://localhost:8080/api/protected/vault/add",
-                { service: selectedService.name, logo: selectedService.logo, password },
+                {
+                    service: selectedService.name,
+                    domain: selectedService.domain,
+                    logo: selectedService.logo,
+                    password,
+                    notes,
+                },
                 {
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `${token}`,
                     },
                 }
             );
 
+            toast.success("Password saved");
+
+            // Reset state
             setSelectedService(null);
             setPassword("");
+            setNotes("");
         } catch (err) {
             console.error("Error saving password:", err);
+            toast.error("Failed to save password");
         } finally {
             setLoading(false);
         }
@@ -71,65 +87,81 @@ export default function AddPassword() {
         <div className="min-h-screen bg-background text-foreground">
             <Navbar />
 
-            <div className="container mx-auto max-w-md py-10">
-                <Card>
+            <div className="container mx-auto max-w-xl py-10 px-4">
+                <Card className="rounded-2xl border shadow-md">
                     <CardHeader>
-                        <CardTitle className="text-2xl font-bold">Add Password</CardTitle>
+                        <CardTitle className="text-2xl font-semibold">Add New Password</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="mb-4">
-                            <Label htmlFor="service">Service / Website</Label>
+
+                    <CardContent className="space-y-6">
+                        {/* Website/Service Search */}
+                        <div>
+                            <Label htmlFor="service">Website</Label>
                             {!selectedService ? (
                                 <WebsiteSearch onSelect={setSelectedService} />
                             ) : (
-                                <div className="mt-2 flex items-center gap-3 p-2 border rounded-lg">
+                                <div className="mt-2 flex items-center gap-3 rounded-lg border px-4 py-2 bg-muted">
                                     <img
                                         src={selectedService.logo || `https://logo.clearbit.com/${selectedService.domain}`}
                                         alt={selectedService.name}
                                         className="w-8 h-8 rounded-md border"
                                     />
-                                    <span className="text-lg font-medium">{selectedService.name}</span>
-                                    <button
-                                        onClick={() => setSelectedService(null)}
-                                        className="ml-auto text-sm text-red-500 hover:underline"
-                                    >
+                                    <span className="font-medium">{selectedService.name}</span>
+                                    <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setSelectedService(null)}>
                                         Change
-                                    </button>
+                                    </Button>
                                 </div>
                             )}
                         </div>
 
-                        <div className="mb-4 relative">
+                        {/* Password Field */}
+                        <div>
                             <Label htmlFor="password">Password</Label>
-                            <div className="relative flex items-center">
+                            <div className="relative mt-1">
                                 <Input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Enter or generate password"
-                                    className="pr-12"
+                                    className="pr-20"
                                 />
-                                <button
-                                    type="button"
-                                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-500"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                                    onClick={copyToClipboard}
-                                >
-                                    {copied ? <Check size={20} className="text-green-500" /> : <Copy size={20} />}
-                                </button>
+                                <div className="absolute inset-y-0 right-0 flex items-center gap-2 pr-3">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={copyToClipboard}
+                                    >
+                                        {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="flex gap-2">
-                            <Button onClick={generatePassword} variant="outline">
-                                Generate Password
+                        {/* Notes */}
+                        <div>
+                            <Label htmlFor="notes">Notes (optional)</Label>
+                            <Textarea
+                                id="notes"
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Add any extra details here..."
+                            />
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={generatePassword}>
+                                Generate
                             </Button>
                             <Button onClick={savePassword} disabled={loading}>
                                 {loading ? "Saving..." : "Save Password"}
