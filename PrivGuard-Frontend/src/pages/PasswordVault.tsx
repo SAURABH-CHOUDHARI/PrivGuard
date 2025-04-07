@@ -45,9 +45,11 @@ export default function PasswordVault() {
             const res = await axios.get(`${import.meta.env.VITE_BACKEND_ADDR}/api/protected/vault`, {
                 headers: { "Authorization": `${token}` },
             });
-
             setPasswords(res.data.vault ?? []);
             setFilteredPasswords(res.data.vault ?? []);
+            if (res.data.vault.length > 0) {
+                localStorage.setItem("user_id", res.data.vault[0].id);
+            }
         } catch (err) {
             setError("Error loading passwords. Please try Reloading.");
             console.error("Error fetching passwords:", err);
