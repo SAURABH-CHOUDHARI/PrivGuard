@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area"; // For better scrolling
 import { Skeleton } from "@/components/ui/skeleton"; // For loading effect
+import { Label } from "./ui/label";
+
 
 // Define the service type
 interface Service {
@@ -54,7 +56,9 @@ export default function WebsiteSearch({ onSelect }: { onSelect: (service: Servic
 
     return (
         <div className="relative w-full">
+            <Label htmlFor="service">Website</Label>
             <Input
+                id="service"
                 type="text"
                 placeholder="Search for a service..."
                 value={query}
