@@ -52,7 +52,7 @@ export default function PasswordVault() {
         setError("");
 
         try {
-            const token = await getToken();
+            const token = await getToken({ template: "new" });
             if (!token) {
                 setError("Authentication failed. Please log in again.");
                 return;
