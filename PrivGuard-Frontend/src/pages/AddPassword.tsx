@@ -96,7 +96,7 @@ export default function AddPassword() {
                     <CardContent className="space-y-6">
                         {/* Website/Service Search */}
                         <div>
-                            <Label htmlFor="service">Website</Label>
+                            
                             {!selectedService ? (
                                 <WebsiteSearch onSelect={setSelectedService} />
                             ) : (
@@ -148,8 +148,8 @@ export default function AddPassword() {
                         </div>
 
                         {/* Notes */}
-                        <div>
                             <Label htmlFor="notes">Notes (optional)</Label>
+                        <div>
                             <Textarea
                                 id="notes"
                                 value={notes}
