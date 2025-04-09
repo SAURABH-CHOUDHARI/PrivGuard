@@ -3,23 +3,36 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { JSX, useState } from "react";
+import { JSX, useState, useEffect } from "react";
+import { ArrowUp } from "lucide-react";
 
 export default function Newsletter(): JSX.Element {
     const [email, setEmail] = useState("");
     const [submitted, setSubmitted] = useState(false);
+    const [showScrollTop, setShowScrollTop] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (email) {
-            // Pretend API call
             setSubmitted(true);
             setTimeout(() => setEmail(""), 1000);
         }
     };
 
+    useEffect(() => {
+        const onScroll = () => {
+            setShowScrollTop(window.scrollY > 300);
+        };
+        window.addEventListener("scroll", onScroll);
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
     return (
-        <section className="py-24 px-6 md:px-12 bg-muted text-foreground">
+        <section className="py-24 px-6 md:px-12 bg-muted text-foreground relative">
             <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -49,6 +62,16 @@ export default function Newsletter(): JSX.Element {
                     </Button>
                 </form>
             </motion.div>
+
+            {showScrollTop && (
+                <button
+                    onClick={scrollToTop}
+                    className="fixed bottom-8 right-6 p-3 bg-primary text-background rounded-full shadow-lg hover:scale-105 transition"
+                    aria-label="Scroll to top"
+                >
+                    <ArrowUp size={20} />
+                </button>
+            )}
         </section>
     );
 }
