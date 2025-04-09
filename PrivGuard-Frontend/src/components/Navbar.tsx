@@ -1,11 +1,22 @@
+// src/components/Navbar.tsx
+
 import { JSX, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserButton, SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
+import MobileNavbar from "@/components/MobileNavbar";
+
+const navLinks = [
+    { name: "Home", path: "/" },
+    { name: "Vault", path: "/vault" },
+    { name: "Add Website", path: "/add-website" },
+    { name: "Check Breaches", path: "/check-breaches" },
+];
 
 export default function Navbar(): JSX.Element {
     const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+    const location = useLocation();
 
     useEffect(() => {
         document.documentElement.classList.toggle("dark", theme === "dark");
@@ -14,20 +25,38 @@ export default function Navbar(): JSX.Element {
 
     return (
         <nav className="flex items-center justify-between p-4 shadow-md bg-background">
-            <Link to="/" className="text-xl font-bold">
-                PrivGuard
-            </Link>
             <div className="flex items-center gap-4">
+                <MobileNavbar />
+                <Link to="/" className="text-xl font-bold">
+                    PrivGuard
+                </Link>
+            </div>
+
+            <div className="hidden md:flex gap-6">
+                {navLinks.map((link) => (
+                    <Link
+                        key={link.name}
+                        to={link.path}
+                        className={`text-sm font-medium transition-colors hover:text-primary ${location.pathname === link.path ? "text-primary" : "text-muted-foreground"
+                            }`}
+                    >
+                        {link.name}
+                    </Link>
+                ))}
+            </div>
+
+            <div className="flex items-center gap-3">
                 <Button
-                    variant="outline"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    aria-label="Toggle dark mode"
                 >
                     {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                 </Button>
 
-                {/* Show UserButton if signed in, else show SignInButton */}
                 <SignedIn>
-                    <UserButton />
+                    <UserButton afterSignOutUrl="/" />
                 </SignedIn>
                 <SignedOut>
                     <SignInButton />
