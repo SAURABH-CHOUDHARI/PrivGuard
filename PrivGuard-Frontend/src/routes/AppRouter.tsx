@@ -4,7 +4,7 @@ import PasswordVault from "@/pages/PasswordVault";
 import PasswordDetail from "@/pages/PasswordDetail";
 import AddPassword from "@/pages/AddPassword";
 import Dashboard from "@/pages/Dashboard";
-import HomePage from "@/pages/HomePage";
+import HomePage from "@/sections/HomePage";
 
 
 const AppRouter = () => {
@@ -12,7 +12,7 @@ const AppRouter = () => {
         <Router>
             <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/main" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/vault" element={<PrivateRoute><PasswordVault /></PrivateRoute>} />
                 <Route path="/vault/add-password" element={<PrivateRoute><AddPassword /></PrivateRoute>} />
                 <Route path="/password/:id" element={<PasswordDetail />} /> {/* Passkey Protected */}
