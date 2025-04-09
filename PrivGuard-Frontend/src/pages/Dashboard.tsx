@@ -4,7 +4,7 @@ import { Shield, PlusCircle, Search } from "lucide-react";
 import { Card } from "../components/ui/card";
 import Navbar from "../components/Navbar";
 
-export default function HeroPage(): JSX.Element {
+export default function Dashboard(): JSX.Element {
     return (
         <div className="min-h-screen flex flex-col bg-background transition-colors">
             <Navbar />
