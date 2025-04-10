@@ -12,6 +12,7 @@ const navLinks = [
     { name: "Vault", path: "/vault" },
     { name: "Add Website", path: "/add-website" },
     { name: "Check Breaches", path: "/check-breaches" },
+    { name: "Fake Identity", path: "/identity" },
 ];
 
 export default function Navbar(): JSX.Element {
