@@ -14,7 +14,7 @@ const AppRouter = () => {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/vault" element={<PrivateRoute><PasswordVault /></PrivateRoute>} />
-                <Route path="/vault/add-password" element={<PrivateRoute><AddPassword /></PrivateRoute>} />
+                <Route path="/add-website" element={<PrivateRoute><AddPassword /></PrivateRoute>} />
                 <Route path="/password/:id" element={<PasswordDetail />} /> {/* Passkey Protected */}
             </Routes>
         </Router>
