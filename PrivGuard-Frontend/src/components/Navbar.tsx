@@ -56,10 +56,19 @@ export default function Navbar(): JSX.Element {
                 </Button>
 
                 <SignedIn>
-                    <UserButton afterSignOutUrl="/" />
+                    <UserButton afterSignOutUrl="/" appearance={{
+                        elements: {
+                            userButtonAvatarBox: "h-8 w-8",
+                        },
+                    }} />
                 </SignedIn>
+
                 <SignedOut>
-                    <SignInButton />
+                    <SignInButton mode="modal">
+                        <Button variant="default" className="px-4 py-2 text-sm font-medium">
+                            Sign In
+                        </Button>
+                    </SignInButton>
                 </SignedOut>
             </div>
         </nav>
