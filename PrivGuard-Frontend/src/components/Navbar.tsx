@@ -6,14 +6,7 @@ import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserButton, SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 import MobileNavbar from "@/components/MobileNavbar";
-
-const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Vault", path: "/vault" },
-    { name: "Add Website", path: "/add-website" },
-    { name: "Check Breaches", path: "/check-breaches" },
-    { name: "Fake Identity", path: "/identity" },
-];
+import { navLinks } from "@/config/navigation"; 
 
 export default function Navbar(): JSX.Element {
     const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
@@ -34,14 +27,15 @@ export default function Navbar(): JSX.Element {
             </div>
 
             <div className="hidden md:flex gap-6">
-                {navLinks.map((link) => (
+                {navLinks.map(({ name, path, icon: Icon }) => (
                     <Link
-                        key={link.name}
-                        to={link.path}
-                        className={`text-sm font-medium transition-colors hover:text-primary ${location.pathname === link.path ? "text-primary" : "text-muted-foreground"
+                        key={name}
+                        to={path}
+                        className={`flex items-center gap-2 text-base font-medium transition-colors hover:text-primary ${location.pathname === path ? "text-primary" : "text-muted-foreground"
                             }`}
                     >
-                        {link.name}
+                        <Icon size={18} />
+                        {name}
                     </Link>
                 ))}
             </div>
