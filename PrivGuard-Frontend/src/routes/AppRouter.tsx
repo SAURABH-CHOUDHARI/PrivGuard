@@ -6,6 +6,7 @@ import AddPassword from "@/pages/AddPassword";
 import Dashboard from "@/pages/Dashboard";
 import HomePage from "@/sections/HomePage";
 import FakeIdentity from "@/pages/FakeIdentity";
+import CheckPassword from "@/pages/CheckPassword";
 
 
 const AppRouter = () => {
@@ -17,7 +18,8 @@ const AppRouter = () => {
                 <Route path="/vault" element={<PrivateRoute><PasswordVault /></PrivateRoute>} />
                 <Route path="/add-website" element={<PrivateRoute><AddPassword /></PrivateRoute>} />
                 <Route path="/password/:id" element={<PasswordDetail />} /> {/* Passkey Protected */}
-                <Route path="/identity" element={<FakeIdentity />} />
+                <Route path="/identity" element={<PrivateRoute><FakeIdentity /></PrivateRoute>} />
+                <Route path="/checkpassword" element={<CheckPassword />} />
             </Routes>
         </Router>
     );
