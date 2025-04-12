@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import HomePage from "@/sections/HomePage";
 import FakeIdentity from "@/pages/FakeIdentity";
 import CheckPassword from "@/pages/CheckPassword";
+import CheckBreaches from "@/pages/CheckBreach";
 
 
 const AppRouter = () => {
@@ -20,6 +21,7 @@ const AppRouter = () => {
                 <Route path="/password/:id" element={<PasswordDetail />} /> {/* Passkey Protected */}
                 <Route path="/identity" element={<PrivateRoute><FakeIdentity /></PrivateRoute>} />
                 <Route path="/checkpassword" element={<CheckPassword />} />
+                <Route path="/check-breaches" element={<CheckBreaches />} />
             </Routes>
         </Router>
     );
