@@ -9,26 +9,30 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// Redis client instance
-var RDB *redis.Client
+// Optionally still expose context if you like
+var Ctx = context.Background()
 
-// InitRedis initializes Redis connection
-func InitRedis() {
-	redisAddr := os.Getenv("REDIS_URL") // Changed from "DB_ADDR" to "REDIS_URL"
+func InitRedis() *redis.Client {
+	redisAddr := os.Getenv("REDIS_URL")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379" // Fallback
+	}
 
-	RDB = redis.NewClient(&redis.Options{
+	rdb := redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
-		Password: os.Getenv("DB_PASS"),
+		Password: os.Getenv("DB_PASS"), // use "" if unauthenticated
 		DB:       0,
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err := RDB.Ping(ctx).Result()
+	_, err := rdb.Ping(ctx).Result()
 	if err != nil {
-		log.Fatalf("Could not connect to Redis: %v", err)
+		log.Fatalf(" Could not connect to Redis: %v", err)
 	}
 
-	log.Println("Connected to Redis successfully!")
+	log.Println(" Connected to Redis successfully!")
+
+	return rdb
 }
