@@ -31,7 +31,7 @@ func AddPasswordHandler(repo storage.Repository) fiber.Handler {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 		}
 
-		err := services.AddPasswordToVault(repo.DB, userID, req.ServiceName, req.Domain, req.Logo, req.Password, req.Notes)
+		err := services.AddPasswordToVault(repo, userID, req.ServiceName, req.Domain, req.Logo, req.Password, req.Notes)
 
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save password"})
