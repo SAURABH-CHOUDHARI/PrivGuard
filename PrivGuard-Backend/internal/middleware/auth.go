@@ -7,11 +7,11 @@ import (
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/clerk"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
-	"gorm.io/gorm"
+	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/storage"
 )
 
 // AuthMiddleware checks Clerk token and syncs user to DB (create if first time)
-func AuthMiddleware(db *gorm.DB) fiber.Handler {
+func AuthMiddleware(repo storage.Repository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		tokenString := c.Get("Authorization")
 		if tokenString == "" {
@@ -49,7 +49,8 @@ func AuthMiddleware(db *gorm.DB) fiber.Handler {
 
 		
 
-		user, err := services.GetOrCreateUser(db, clerkID, email, firstName , lastName)
+		user, err := services.GetOrCreateUser(repo, clerkID, email, firstName, lastName)
+
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "User check failed"})
 		}
