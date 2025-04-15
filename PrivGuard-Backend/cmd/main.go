@@ -22,31 +22,34 @@ func main() {
 	}
 
 	// Initialize Redis
-	config.InitRedis()
+	redisClient := config.InitRedis()
 
 	// Connect to Postgres
 	db, err := storage.NewConnection()
 	if err != nil {
-		log.Fatal(" Could not connect to DB")
+		log.Fatal("❌ Could not connect to DB")
 	}
 
-	// ✅ Conditional migration based on env var
+	// Conditional migration
 	if os.Getenv("RUN_MIGRATIONS") == "true" {
 		migrations.AutoMigrate(db)
 	}
 
-	// Set up Repository
-	vaultRoutes := storage.Repository{DB: db}
+	// Set up Repository with both DB and Redis
+	vaultRoutes := storage.Repository{
+		DB:          db,
+		RedisClient: redisClient,
+	}
 
-	// Create Fiber app
+	// Set up Fiber app
 	app := fiber.New()
-	app.Use(logger.New()) // Logs incoming requests
-	app.Use(cors.New())   // Enable CORS
+	app.Use(logger.New())
+	app.Use(cors.New())
 
-	// Register Routes
+	// Register all routes
 	routes.RegisterRoutes(app, vaultRoutes)
 
-	// Start server
+	// Start the server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
