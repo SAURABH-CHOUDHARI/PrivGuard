@@ -8,13 +8,13 @@ import (
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/storage"
 )
 
-func RegisterRoutes(app *fiber.App, vaultRoutes storage.Repository) {
+func RegisterRoutes(app *fiber.App, repo storage.Repository) {
 	api := app.Group("/api")
 
-	protected := api.Group("/protected", middleware.AuthMiddleware(vaultRoutes.DB))
-	protected.Get("/vault", handlers.VaultHandler(vaultRoutes))
-	protected.Post("/vault/add", handlers.AddPasswordHandler(vaultRoutes))
-	protected.Get("/vault/:id", handlers.GetPasswordDetailHandler(vaultRoutes))
+	protected := api.Group("/protected", middleware.AuthMiddleware(repo))
+	protected.Get("/vault", handlers.VaultHandler(repo))
+	protected.Post("/vault/add", handlers.AddPasswordHandler(repo))
+	protected.Get("/vault/:id", handlers.GetPasswordDetailHandler(repo))
 
 	
 }
