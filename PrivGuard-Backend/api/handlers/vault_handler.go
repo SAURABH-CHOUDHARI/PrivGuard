@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/SAURABH-CHOUDHARI/privguard-backend/internal/models"
+	"github.com/SAURABH-CHOUDHARI/privguard-backend/internal/services"
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/storage"
-	"github.com/google/uuid"
+	"github.com/SAURABH-CHOUDHARI/privguard-backend/internal/models"
+	"github.com/gofiber/fiber/v2"
+	
 )
 
 func VaultHandler(repo storage.Repository) fiber.Handler {
@@ -16,31 +17,24 @@ func VaultHandler(repo storage.Repository) fiber.Handler {
 			})
 		}
 
-		// Parse UUID from string
-		userUUID, err := uuid.Parse(userIDStr)
+		// Step 1: Get or create vault using service
+		vaultID, err := services.GetOrCreateVault(repo, userIDStr)
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Invalid user ID format",
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to retrieve or create vault",
 			})
 		}
 
+		// Step 2: Load full vault with services
 		var vault models.Vault
-		err = repo.DB.Preload("Services").Where("user_id = ?", userUUID).First(&vault).Error
-
+		err = repo.DB.Preload("Services").Where("id = ?", vaultID).First(&vault).Error
 		if err != nil {
-			// Vault not found, so let's create it
-			vault = models.Vault{
-				UserID:   userUUID,
-				Services: []models.Service{},
-			}
-			if err := repo.DB.Create(&vault).Error; err != nil {
-				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"error": "Failed to create new vault",
-				})
-			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to load vault services",
+			})
 		}
 
-		// Construct response without decrypting passwords
+		// Step 3: Return service metadata
 		services := make([]fiber.Map, 0, len(vault.Services))
 		for _, s := range vault.Services {
 			services = append(services, fiber.Map{
