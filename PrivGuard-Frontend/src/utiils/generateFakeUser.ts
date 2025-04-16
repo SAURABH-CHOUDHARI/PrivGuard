@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 
 export function generateFakeUser() {
     const tempDomains = ["1secmail.com", "1secmail.net", "1secmail.org"];
-    const username = faker.internet.userName().toLowerCase();
+    const username = faker.internet.username().toLowerCase();
     const domain = faker.helpers.arrayElement(tempDomains);
 
     return {
