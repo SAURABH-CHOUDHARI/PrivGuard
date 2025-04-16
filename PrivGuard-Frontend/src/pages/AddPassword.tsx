@@ -4,7 +4,7 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
-import WebsiteSearch from "@/components/WebsiteSearch";
+import WebsiteSearch from "@/components/addPassword/WebsiteSearch";
 import { toast } from "sonner";
 import PasswordField from "@/components/addPassword/PasswordField";
 import SelectedServicePreview from "@/components/addPassword/SelectedServicePreview";

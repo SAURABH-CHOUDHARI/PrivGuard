@@ -1,4 +1,4 @@
-import PasswordBreachCheck from "@/components/PasswordBreachCheck";
+import PasswordBreachCheck from "@/components/CheckPassword/PasswordBreachCheck";
 import Navbar from "@/components/Navbar";
 
 const CheckPassword = () => {

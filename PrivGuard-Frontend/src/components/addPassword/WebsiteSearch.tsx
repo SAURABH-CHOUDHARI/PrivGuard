@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area"; // For better scrolling
 import { Skeleton } from "@/components/ui/skeleton"; // For loading effect
-import { Label } from "./ui/label";
+import { Label } from "@/components/ui/label";
 
 
 // Define the service type
