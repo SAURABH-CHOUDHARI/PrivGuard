@@ -1,4 +1,3 @@
-// src/components/fakeIdentity/TempInboxViewer.tsx
 import { useEffect, useState } from "react";
 import { fetchTempEmails } from "@/lib/tempMail";
 
@@ -55,7 +54,7 @@ export default function TempInboxViewer({ email }: TempInboxViewerProps) {
             ) : (
                 <ul className="space-y-2 text-sm">
                     {messages.map((msg) => (
-                        <li key={msg.id} className="bg-background p-3 rounded shadow">
+                        <li key={msg.id} className="bg-background p-3 rounded shadow hover:shadow-lg transition-all">
                             <p className="font-medium">{msg.subject}</p>
                             <p className="text-xs text-muted-foreground">From: {msg.from?.address}</p>
                             <p className="text-sm mt-1">{msg.intro}</p>
