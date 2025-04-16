@@ -60,6 +60,7 @@ export default function WebsiteSearch({ onSelect }: { onSelect: (service: Servic
             <Input
                 id="service"
                 type="text"
+                autoComplete="off"
                 placeholder="Search for a service..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
