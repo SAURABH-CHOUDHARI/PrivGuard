@@ -34,7 +34,7 @@ export default function AddPassword() {
         try {
             const token = await getToken();
             await axios.post(
-                "http://localhost:8080/api/protected/vault/add",
+                `${import.meta.env.VITE_BACKEND_ADDR}/api/protected/vault/add`,
                 {
                     service: selectedService.name,
                     domain: selectedService.domain,
@@ -67,9 +67,9 @@ export default function AddPassword() {
             <Navbar />
 
             <div className="container mx-auto max-w-xl py-10 px-4">
-                <Card className="rounded-2xl border shadow-md">
-                    <CardHeader>
-                        <CardTitle className="text-2xl font-semibold">Add New Password</CardTitle>
+                <Card className="rounded-2xl border shadow-xl">
+                    <CardHeader className="pb-4">
+                        <CardTitle className="text-2xl font-bold tracking-tight">Add New Password</CardTitle>
                     </CardHeader>
 
                     <CardContent className="space-y-6">
@@ -77,7 +77,10 @@ export default function AddPassword() {
                             {!selectedService ? (
                                 <WebsiteSearch onSelect={setSelectedService} />
                             ) : (
-                                <SelectedServicePreview service={selectedService} onClear={() => setSelectedService(null)} />
+                                <SelectedServicePreview
+                                    service={selectedService}
+                                    onClear={() => setSelectedService(null)}
+                                />
                             )}
                         </div>
 
@@ -85,11 +88,19 @@ export default function AddPassword() {
 
                         <NotesField notes={notes} setNotes={setNotes} />
 
-                        <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={generatePassword}>
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button
+                                variant="outline"
+                                onClick={generatePassword}
+                                className="rounded-xl"
+                            >
                                 Generate
                             </Button>
-                            <Button onClick={savePassword} disabled={loading}>
+                            <Button
+                                onClick={savePassword}
+                                disabled={loading}
+                                className="rounded-xl"
+                            >
                                 {loading ? "Saving..." : "Save Password"}
                             </Button>
                         </div>
