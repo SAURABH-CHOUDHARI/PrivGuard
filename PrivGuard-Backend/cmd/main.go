@@ -13,6 +13,7 @@ import (
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/db/migrations"
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/internal/routes"
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/storage"
+	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/webauthnutil"
 )
 
 func main() {
@@ -23,6 +24,9 @@ func main() {
 
 	// Initialize Redis
 	redisClient := config.InitRedis()
+
+	// Initialize WebAuthn
+	webauthn := webauthnutil.New()
 
 	// Connect to Postgres
 	db, err := storage.NewConnection()
@@ -44,10 +48,16 @@ func main() {
 	// Set up Fiber app
 	app := fiber.New()
 	app.Use(logger.New())
-	app.Use(cors.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:5173", // your frontend origin
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowCredentials: true,
+		AllowMethods:     "GET,POST,OPTIONS", // include OPTIONS for preflight
+	}))
 
 	// Register all routes
-	routes.RegisterRoutes(app, vaultRoutes)
+	routes.SetupRoutes(app, vaultRoutes, webauthn)
+
 
 	// Start the server
 	port := os.Getenv("PORT")
