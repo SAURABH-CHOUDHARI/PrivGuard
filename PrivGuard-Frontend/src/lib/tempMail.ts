@@ -54,7 +54,6 @@ export async function createTempAccount(): Promise<string> {
     });
 
     const authToken = tokenRes.data.token;
-    console.log(authToken)
 
     // Store the email, timestamp, and token in localStorage
     localStorage.setItem("tempEmail", randomEmail);
