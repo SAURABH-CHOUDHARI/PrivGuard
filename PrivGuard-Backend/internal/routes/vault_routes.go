@@ -16,4 +16,7 @@ func RegisterRoutes(router fiber.Router, repo storage.Repository,  ) {
     vault.Get("/", handlers.VaultHandler(repo))
     vault.Post("/add", handlers.AddPasswordHandler(repo))
     vault.Get("/:id", handlers.GetPasswordDetailHandler(repo))	
+    vault.Delete("/:id", handlers.DeletePasswordHandler(repo))	
+    vault.Post("/:id/update-note", handlers.UpdateServiceNotesHandler(repo))	
+    vault.Post("/:id/update-password", handlers.UpdateServicePasswordHandler(repo))	
 }
