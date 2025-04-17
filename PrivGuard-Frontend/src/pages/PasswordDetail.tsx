@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Loader2, Copy, Eye, EyeOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/clerk-react";
 import Navbar from "@/components/Navbar";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import PasswordCard from "@/components/password/PasswordCard";
 
 interface PasswordDetail {
     id: string;
@@ -21,23 +18,18 @@ interface PasswordDetail {
 
 export default function PasswordDetailPage() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [entry, setEntry] = useState<PasswordDetail | null>(null);
     const [loading, setLoading] = useState(true);
-    const [showPassword, setShowPassword] = useState(false);
-
     const { getToken } = useAuth();
 
     useEffect(() => {
         const fetchPasswordDetail = async () => {
             try {
                 const token = await getToken({ template: "new" });
-                if (!token) throw new Error("Token retrieval failed");
-
-                const res = await axios.get(
-                    `${import.meta.env.VITE_BACKEND_ADDR}/api/protected/vault/${id}`,
-                    { headers: { Authorization: token } }
-                );
-
+                const res = await axios.get(`${import.meta.env.VITE_BACKEND_ADDR}/api/protected/vault/${id}`, {
+                    headers: { Authorization: token },
+                });
                 setEntry(res.data);
             } catch (err) {
                 toast.error("Failed to load password detail");
@@ -50,10 +42,52 @@ export default function PasswordDetailPage() {
         if (id) fetchPasswordDetail();
     }, [id, getToken]);
 
-    const copyPassword = () => {
-        if (entry?.password) {
-            navigator.clipboard.writeText(entry.password);
-            toast.success("Password copied to clipboard");
+    const handleDelete = async (passwordId: string) => {
+        try {
+            const token = await getToken({ template: "new" });
+            await axios.delete(`${import.meta.env.VITE_BACKEND_ADDR}/api/protected/vault/${passwordId}`, {
+                headers: { Authorization: token },
+            });
+
+            toast.success("Password deleted successfully");
+            navigate("/vault"); // Redirect to vault list route
+        } catch (err) {
+            toast.error("Failed to delete password");
+            console.error(err);
+        }
+    };
+
+    const handleUpdateNotes = async (notes: string) => {
+        try {
+            const token = await getToken({ template: "new" });
+            await axios.post(
+                `${import.meta.env.VITE_BACKEND_ADDR}/api/protected/vault/${id}/update-note`,
+                { notes },
+                { headers: { Authorization: token } }
+            );
+
+            setEntry((prev) => (prev ? { ...prev, notes } : prev)); 
+            toast.success("Notes updated successfully");
+        } catch (err) {
+            toast.error("Failed to update notes");
+            console.error(err);
+        }
+    };
+
+    const handleUpdatePassword = async (newPassword: string) => {
+        try {
+            const token = await getToken({ template: "new" });
+            await axios.post(
+                `${import.meta.env.VITE_BACKEND_ADDR}/api/protected/vault/${id}/update-password`,
+                { password: newPassword },
+                { headers: { Authorization: token } }
+            );
+
+            setEntry((prev) => (prev ? { ...prev, password: newPassword } : prev)); // Update local state with new password
+            toast.success("Password updated successfully");
+        } catch (err) {
+            toast.error("Failed to update password");
+            console.error(err);
         }
     };
 
@@ -66,65 +100,18 @@ export default function PasswordDetailPage() {
     }
 
     if (!entry) {
-        return (
-            <div className="text-center pt-20 text-muted-foreground">
-                Password not found.
-            </div>
-        );
+        return <div className="text-center pt-20 text-muted-foreground">Password not found.</div>;
     }
 
     return (
         <>
             <Navbar />
-            <div className="flex justify-center pt-12 px-4">
-                <Card className="w-full max-w-md">
-                    <CardHeader className="flex flex-col items-center text-center space-y-2">
-                        <Avatar className="w-16 h-16">
-                            <AvatarImage
-                                src={entry.logo || `https://logo.clearbit.com/${entry.domain}`}
-                                alt={entry.service}
-                                className="bg-white p-1 object-contain"
-                            />
-                            <AvatarFallback>{entry.service[0]}</AvatarFallback>
-                        </Avatar>
-                        <CardTitle className="text-2xl font-bold">
-                            {entry.service}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">{entry.domain}</p>
-                    </CardHeader>
-
-                    <CardContent className="space-y-5">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Notes</label>
-                            <p className="text-muted-foreground text-sm">
-                                {entry.notes || "No notes"}
-                            </p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Password</label>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    type={showPassword ? "text" : "password"}
-                                    value={entry.password}
-                                    readOnly
-                                />
-                                <Button variant="ghost" size="icon" onClick={copyPassword}>
-                                    <Copy size={18} />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setShowPassword((prev) => !prev)}
-                                    aria-label="Toggle password visibility"
-                                >
-                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            <PasswordCard
+                entry={entry}
+                onDelete={handleDelete}
+                onUpdateNotes={handleUpdateNotes}
+                onUpdatePassword={handleUpdatePassword}
+            />
         </>
     );
 }
