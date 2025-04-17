@@ -58,3 +58,9 @@ func (r *Repository) UpdateCredential(cred *models.WebAuthnCredential) error {
 func (r *Repository) DeleteCache(key string) error {
     return r.RedisClient.Del(context.Background(), key).Err()
 }
+
+func (r *Repository) DeletePasswordFromVault(vaultID string, serviceID string) error {
+	return r.DB.
+		Where("vault_id = ? AND id = ?", vaultID, serviceID).
+		Delete(&models.Service{}).Error
+}
