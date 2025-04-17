@@ -9,7 +9,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// Optionally still expose context if you like
 var Ctx = context.Background()
 
 func InitRedis() *redis.Client {
@@ -19,12 +18,19 @@ func InitRedis() *redis.Client {
 	}
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
-		Password: os.Getenv("DB_PASS"), // use "" if unauthenticated
-		DB:       0,
+		Addr:         redisAddr,
+		Password:     os.Getenv("DB_PASS"),
+		DB:           0,
+		// Performance optimizations
+		PoolSize:     100,                  // Increase from default (10) for high concurrency
+		MinIdleConns: 20,                   // Keep connections ready
+		PoolTimeout:  4 * time.Second,      // How long to wait for connection if pool is exhausted
+		ReadTimeout:  100 * time.Millisecond, // Lower read timeout for faster failure detection
+		WriteTimeout: 100 * time.Millisecond, // Lower write timeout
+		DialTimeout:  200 * time.Millisecond, // Connection establishment timeout
 	})
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	_, err := rdb.Ping(ctx).Result()
