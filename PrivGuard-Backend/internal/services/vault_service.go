@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/internal/models"
-	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/storage"
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/crypto"
+	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/storage"
 	"github.com/google/uuid"
 )
 
@@ -138,4 +138,128 @@ func GetOrCreateVault(repo storage.Repository, userID string) (uuid.UUID, error)
 
 	log.Println(" Vault fetched from DB and cached")
 	return vault.ID, nil
+}
+
+func DeleteServiceFromVault(repo storage.Repository, userID, serviceID string) error {
+	ctx := context.Background()
+	db := repo.DB
+	redis := repo.RedisClient
+
+	// Parse UUIDs
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	parsedServiceID, err := uuid.Parse(serviceID)
+	if err != nil {
+		return fmt.Errorf("invalid service ID: %w", err)
+	}
+
+	// Get or create vault
+	var vault models.Vault
+	if err := db.Where("user_id = ?", parsedUserID).First(&vault).Error; err != nil {
+		return fmt.Errorf("failed to find vault: %w", err)
+	}
+
+	// Delete the service
+	if err := db.Where("id = ? AND vault_id = ?", parsedServiceID, vault.ID).Delete(&models.Service{}).Error; err != nil {
+		return fmt.Errorf("failed to delete service: %w", err)
+	}
+
+	// Invalidate Redis cache
+	cacheKey := fmt.Sprintf("vault:%s", userID)
+	if err := redis.Del(ctx, cacheKey).Err(); err != nil {
+		log.Printf("Failed to invalidate Redis cache after deletion: %v", err)
+	}
+
+	return nil
+}
+
+func UpdateServiceNotes(repo storage.Repository, userID, serviceID, newNotes string) error {
+	ctx := context.Background()
+	db := repo.DB
+	redis := repo.RedisClient
+
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	parsedServiceID, err := uuid.Parse(serviceID)
+	if err != nil {
+		return fmt.Errorf("invalid service ID: %w", err)
+	}
+
+	var vault models.Vault
+	if err := db.Where("user_id = ?", parsedUserID).First(&vault).Error; err != nil {
+		return fmt.Errorf("failed to find vault: %w", err)
+	}
+
+	
+	// Update notes
+	if err := db.Model(&models.Service{}).
+		Where("id = ? AND vault_id = ?", parsedServiceID, vault.ID).
+		Update("notes", newNotes).Error; err != nil {
+		return fmt.Errorf("failed to update notes: %w", err)
+	}
+
+	// Invalidate Redis cache
+	cacheKey := fmt.Sprintf("vault:%s", userID)
+	if err := redis.Del(ctx, cacheKey).Err(); err != nil {
+		log.Printf("Failed to invalidate Redis cache after note update: %v", err)
+	}
+
+	return nil
+}
+
+func UpdateServicePassword(repo storage.Repository, userID, serviceID, newRawPassword string) error {
+	ctx := context.Background()
+	db := repo.DB
+	redis := repo.RedisClient
+
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	parsedServiceID, err := uuid.Parse(serviceID)
+	if err != nil {
+		return fmt.Errorf("invalid service ID: %w", err)
+	}
+
+	var vault models.Vault
+	if err := db.Where("user_id = ?", parsedUserID).First(&vault).Error; err != nil {
+		return fmt.Errorf("failed to find vault: %w", err)
+	}
+
+	// Load encryption key
+	key, err := crypto.LoadAESKey()
+	if err != nil {
+		return fmt.Errorf("failed to load encryption key: %w", err)
+	}
+
+	encryptedPass, iv, err := crypto.EncryptAES([]byte(newRawPassword), key)
+	if err != nil {
+		return fmt.Errorf("encryption failed: %w", err)
+	}
+
+	// Update the encrypted password and IV
+	if err := db.Model(&models.Service{}).
+		Where("id = ? AND vault_id = ?", parsedServiceID, vault.ID).
+		Updates(map[string]interface{}{
+			"encrypted_password": encryptedPass,
+			"iv":                 iv,
+			"updated_at":         time.Now(),
+		}).Error; err != nil {
+		return fmt.Errorf("failed to update encrypted password: %w", err)
+	}
+
+	// Invalidate Redis cache
+	cacheKey := fmt.Sprintf("vault:%s", userID)
+	if err := redis.Del(ctx, cacheKey).Err(); err != nil {
+		log.Printf("Failed to invalidate Redis cache after password update: %v", err)
+	}
+
+	return nil
 }
