@@ -52,7 +52,7 @@ func main() {
 		AllowOrigins:     "http://localhost:5173", // your frontend origin
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true,
-		AllowMethods:     "GET,POST,OPTIONS", // include OPTIONS for preflight
+		AllowMethods:     "GET,POST,OPTIONS,DELETE", // include OPTIONS for preflight
 	}))
 
 	// Register all routes
