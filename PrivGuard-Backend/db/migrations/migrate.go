@@ -14,6 +14,7 @@ func AutoMigrate(db *gorm.DB) {
 		&models.Vault{},
 		&models.Service{},
 		&models.WebAuthnCredential{}, 
+		&models.TOTPSecret{},
 	)
 
 	if err != nil {
