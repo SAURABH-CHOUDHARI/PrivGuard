@@ -3,10 +3,12 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/joho/godotenv"
 
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/config"
@@ -48,6 +50,14 @@ func main() {
 	// Set up Fiber app
 	app := fiber.New()
 	app.Use(logger.New())
+
+	// Global Rate Limiting: 100 requests per minute per IP
+	app.Use(limiter.New(limiter.Config{
+		Max:        100,
+		Expiration: 1 * time.Minute,
+	}))
+
+
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://localhost:5173", // your frontend origin
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
