@@ -5,15 +5,17 @@ import (
 	"time"
 )
 
+// pkg/models/webauthn_credential.go
 type WebAuthnCredential struct {
-	ID              uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
-	UserID          string    `gorm:"index;not null"` // Clerk or internal User ID
-	CredentialID    string    `gorm:"unique;not null"` // Base64 encoded
-	PublicKey       []byte    `gorm:"not null"` // Raw public key
-	AttestationType string
-	AAGUID          string
-	SignCount       uint32
-	CloneWarning    bool
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+    ID            uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+    UserID        string    `gorm:"index;not null"`
+    CredentialID  string    `gorm:"unique;not null"`
+    PublicKey     []byte    `gorm:"not null"`
+    AttestationType string
+    AAGUID        string
+    SignCount     uint32
+    CloneWarning  bool
+    DeviceName    string    // ← friendly name supplied by client
+    CreatedAt     time.Time
+    UpdatedAt     time.Time
 }
