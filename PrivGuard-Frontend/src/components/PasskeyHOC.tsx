@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/clerk-react";
-import { useState } from "react";
+import { JSX, useState } from "react";
 import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import Navbar from "./Navbar";
 
-// HOC that handles the passkey authentication and registration
-export function withPasskeyAuth<P>(WrappedComponent: React.ComponentType<P>) {
-    return function PasskeyAuthHOC(props: P & React.JSX.IntrinsicAttributes) {
+// ✅ Fixed HOC with proper typing
+export function withPasskeyAuth<P extends JSX.IntrinsicAttributes>(
+    WrappedComponent: React.ComponentType<P>
+) {
+    const PasskeyAuthHOC: React.FC<P> = (props) => {
         const { getToken } = useAuth();
         const [loading, setLoading] = useState(false);
         const [authenticated, setAuthenticated] = useState(false);
@@ -87,17 +89,17 @@ export function withPasskeyAuth<P>(WrappedComponent: React.ComponentType<P>) {
             }
         };
 
-        // Render logic based on the state
+        // Render logic
         if (loading) {
             return (
                 <>
-                <Navbar/>
-                <Card className="max-w-sm mx-auto mt-10 shadow-lg">
-                    <CardContent className="p-6 space-y-4 text-center">
-                        <h2 className="text-lg font-semibold">Verifying passkey...</h2>
-                        <p>Please complete the authentication on your device.</p>
-                    </CardContent>
-                </Card>
+                    <Navbar />
+                    <Card className="max-w-sm mx-auto mt-10 shadow-lg">
+                        <CardContent className="p-6 space-y-4 text-center">
+                            <h2 className="text-lg font-semibold">Verifying passkey...</h2>
+                            <p>Please complete the authentication on your device.</p>
+                        </CardContent>
+                    </Card>
                 </>
             );
         }
@@ -105,42 +107,45 @@ export function withPasskeyAuth<P>(WrappedComponent: React.ComponentType<P>) {
         if (error && !authenticated) {
             return (
                 <>
-                <Navbar/>
-                <Card className="max-w-sm mx-auto mt-10 shadow-lg">
-                    <CardContent className="p-6 space-y-4 text-center">
-                        <h2 className="text-lg font-semibold text-red-600">Authentication Failed</h2>
-                        <p>{error}</p>
-                        <Button onClick={handleLogin} className="w-full">
-                            Retry
-                        </Button>
-                    </CardContent>
-                </Card>
+                    <Navbar />
+                    <Card className="max-w-sm mx-auto mt-10 shadow-lg">
+                        <CardContent className="p-6 space-y-4 text-center">
+                            <h2 className="text-lg font-semibold text-red-600">Authentication Failed</h2>
+                            <p>{error}</p>
+                            <Button onClick={handleLogin} className="w-full">
+                                Retry
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </>
             );
         }
 
-        // Once authenticated, render the wrapped component
         if (authenticated) {
             return <WrappedComponent {...props} />;
         }
 
         return (
             <>
-            <Navbar/>
-            <Card className="max-w-sm mx-auto mt-10 shadow-lg">
-                <CardContent className="p-6 space-y-4">
-                    <h2 className="text-xl font-semibold">Secure your account</h2>
-                    <div className="space-y-2">
-                        <Button onClick={handleRegister} disabled={loading} className="w-full">
-                            {loading ? "Registering..." : "Register Passkey"}
-                        </Button>
-                        <Button onClick={handleLogin} disabled={loading} variant="outline" className="w-full">
-                            {loading ? "Authenticating..." : "Login with Passkey"}
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+                <Navbar />
+                <Card className="max-w-sm mx-auto mt-10 shadow-lg">
+                    <CardContent className="p-6 space-y-4">
+                        <h2 className="text-xl font-semibold">Secure your account</h2>
+                        <div className="space-y-2">
+                            <Button onClick={handleRegister} disabled={loading} className="w-full">
+                                {loading ? "Registering..." : "Register Passkey"}
+                            </Button>
+                            <Button onClick={handleLogin} disabled={loading} variant="outline" className="w-full">
+                                {loading ? "Authenticating..." : "Login with Passkey"}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
             </>
         );
     };
+
+    PasskeyAuthHOC.displayName = `WithPasskeyAuth(${WrappedComponent.displayName || WrappedComponent.name || "Component"})`;
+
+    return PasskeyAuthHOC;
 }
