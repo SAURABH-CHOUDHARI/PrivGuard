@@ -90,17 +90,22 @@ export function withPasskeyAuth<P>(WrappedComponent: React.ComponentType<P>) {
         // Render logic based on the state
         if (loading) {
             return (
+                <>
+                <Navbar/>
                 <Card className="max-w-sm mx-auto mt-10 shadow-lg">
                     <CardContent className="p-6 space-y-4 text-center">
                         <h2 className="text-lg font-semibold">Verifying passkey...</h2>
                         <p>Please complete the authentication on your device.</p>
                     </CardContent>
                 </Card>
+                </>
             );
         }
 
         if (error && !authenticated) {
             return (
+                <>
+                <Navbar/>
                 <Card className="max-w-sm mx-auto mt-10 shadow-lg">
                     <CardContent className="p-6 space-y-4 text-center">
                         <h2 className="text-lg font-semibold text-red-600">Authentication Failed</h2>
@@ -110,6 +115,7 @@ export function withPasskeyAuth<P>(WrappedComponent: React.ComponentType<P>) {
                         </Button>
                     </CardContent>
                 </Card>
+                </>
             );
         }
 
