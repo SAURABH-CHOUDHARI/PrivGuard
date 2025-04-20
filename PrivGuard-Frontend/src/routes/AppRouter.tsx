@@ -9,6 +9,9 @@ import CheckPassword from "@/pages/CheckPassword";
 import CheckBreaches from "@/pages/CheckBreach";
 import { withPasskeyAuth } from "@/components/PasskeyHOC";
 import PasswordDetailPage from "@/pages/PasswordDetail";
+import TOTPGuard from "@/components/TOTPGuard";
+import SecurityDashboard from "@/pages/SecurtityDashboard";
+import TOTPSetup from "@/pages/TOTPSetup";
 
 
 
@@ -16,6 +19,15 @@ import PasswordDetailPage from "@/pages/PasswordDetail";
 const AppRouter = () => {
 
     const WithPasskeyPasswordDetails = withPasskeyAuth(PasswordDetailPage);
+
+
+
+    const ProtectedSecurityCenter = (() => (
+        <TOTPGuard>
+            <SecurityDashboard/>
+        </TOTPGuard>
+    ));
+
 
 
 
@@ -27,9 +39,11 @@ const AppRouter = () => {
                 <Route path="/vault" element={<PrivateRoute><PasswordVault /></PrivateRoute>} />
                 <Route path="/add-website" element={<PrivateRoute><AddPassword /></PrivateRoute>} />
                 <Route path="/password/:id" element={<WithPasskeyPasswordDetails />} /> {/* Passkey Protected */}
-                <Route path="/identity" element={<PrivateRoute><FakeIdentity /></PrivateRoute>} />
+                <Route path="/identity" element={<FakeIdentity />} />
                 <Route path="/checkpassword" element={<CheckPassword />} />
                 <Route path="/check-breaches" element={<CheckBreaches />} />
+                <Route path="/security" element={<ProtectedSecurityCenter />} />
+                <Route path="/totp-setup" element={<TOTPSetup/>}/>
             </Routes>
         </Router>
     );
