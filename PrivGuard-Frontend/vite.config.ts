@@ -12,4 +12,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // server: {
+  //   host: true, // or specify e.g., '0.0.0.0' for LAN access
+  //   port: 5173,
+  // },
 })
