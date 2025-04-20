@@ -64,3 +64,16 @@ func (r *Repository) DeletePasswordFromVault(vaultID string, serviceID string) e
 		Where("vault_id = ? AND id = ?", vaultID, serviceID).
 		Delete(&models.Service{}).Error
 }
+
+func (r *Repository) FindCredentialByUserID(id string) (*models.WebAuthnCredential, error) {
+	var cred models.WebAuthnCredential
+	if err := r.DB.Where("id = ?", id).First(&cred).Error; err != nil {
+		return nil, err
+	}
+	return &cred, nil
+}
+
+
+func (r *Repository) DeleteCredential(id string) error {
+	return r.DB.Where("id = ?", id).Delete(&models.WebAuthnCredential{}).Error
+}
