@@ -5,6 +5,7 @@ import {
     ShieldAlert,
     UserSquare2,
     ShieldCheck,
+    Lock
 } from "lucide-react";
 
 export const navLinks = [
@@ -14,4 +15,5 @@ export const navLinks = [
     { name: "Check Breaches", path: "/check-breaches", icon: ShieldAlert },
     { name: "Fake Identity", path: "/identity", icon: UserSquare2 },
     { name: "Password Check", path: "/checkpassword", icon: ShieldCheck },
+    { name: "Security Center", path: "/security", icon: Lock },
 ];
