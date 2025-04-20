@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -11,11 +12,12 @@ type Service struct {
 	ServiceName       string    `gorm:"not null;index"`
 	ServiceDomain     string
 	LogoURL           string
-	EncryptedPassword string    `gorm:"not null"`
-	IV                string    `gorm:"not null"` 
+	EncryptedPassword string `gorm:"not null"`
+	IV                string `gorm:"not null"`
 	Notes             string
-	CreatedAt         time.Time `gorm:"autoCreateTime"`
-	UpdatedAt         time.Time `gorm:"autoUpdateTime"`
+	StrengthScore 	  int8	 `gorm:"not null;comment:Password strength score (0-100)"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 
 	// Relations
 	Vault Vault `gorm:"foreignKey:VaultID"`
