@@ -3,18 +3,22 @@ package storage
 import (
 	"fmt"
 	"os"
-	"time"
 	"strconv"
+	"time"
 
-	"gorm.io/driver/postgres"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 // Repository wraps the DB instance
 type Repository struct {
-	DB *gorm.DB
+	DB          *gorm.DB
 	RedisClient *redis.Client
+}
+
+func (r Repository) FindCredentialByID(passkeyID string) (any, error) {
+	panic("unimplemented")
 }
 
 // getEnvInt safely retrieves an integer from the environment, with a fallback default value
@@ -51,16 +55,14 @@ func NewConnection() (*gorm.DB, error) {
 	}
 
 	// Fetch dynamic configuration for connection pool
-	maxIdleConns := getEnvInt("DB_MAX_IDLE_CONNS", 50)  // Default 50
-	maxOpenConns := getEnvInt("DB_MAX_OPEN_CONNS", 500) // Default 500
+	maxIdleConns := getEnvInt("DB_MAX_IDLE_CONNS", 50)       // Default 50
+	maxOpenConns := getEnvInt("DB_MAX_OPEN_CONNS", 500)      // Default 500
 	connMaxLifetime := getEnvInt("DB_CONN_MAX_LIFETIME", 10) // Default 10 minutes
 
 	// Set the connection pool settings
 	sqlDB.SetMaxIdleConns(maxIdleConns)
 	sqlDB.SetMaxOpenConns(maxOpenConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(connMaxLifetime) * time.Minute)
-
-	
 
 	// Testing connection
 	if err := sqlDB.Ping(); err != nil {
