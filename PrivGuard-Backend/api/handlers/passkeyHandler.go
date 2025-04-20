@@ -75,8 +75,6 @@ func StartRegistrationHandler(repo storage.Repository, wa *webauthn.WebAuthn) fi
 	}
 }
 
-
-
 // --- Register Finish ---
 func FinishRegistrationHandler(repo storage.Repository, wa *webauthn.WebAuthn) fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -127,9 +125,19 @@ func FinishRegistrationHandler(repo storage.Repository, wa *webauthn.WebAuthn) f
 			}
 		}
 
+
+		//  Extract name from body
+		var body struct {
+			Name string `json:"name"`
+		}
+		if err := c.BodyParser(&body); err != nil || body.Name == "" {
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Missing passkey name"})
+		}
+
 		// Store the new credential
 		newCred := models.WebAuthnCredential{
 			UserID:          user.ID.String(),
+			Name:            body.Name, 
 			CredentialID:    base64.RawURLEncoding.EncodeToString(cred.ID),
 			PublicKey:       cred.PublicKey,
 			AttestationType: cred.AttestationType,
@@ -226,4 +234,58 @@ func FinishLoginHandler(repo storage.Repository, wa *webauthn.WebAuthn) fiber.Ha
 			"userId": user.ID.String(),
 		})
 	}
+}
+
+// --- Get Passkeys ---
+func GetPasskeysHandler(repo storage.Repository) fiber.Handler {
+    return func(c *fiber.Ctx) error {
+        userID, _ := c.Locals("clerk_id").(string)
+        user, err := repo.FindUserByClerkID(userID)
+        if err != nil {
+            return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+        }
+
+        creds, err := repo.FindCredentialsByUserID(user.ID.String())
+        if err != nil {
+            return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Could not fetch credentials"})
+        }
+
+        var resp []fiber.Map
+        for _, cred := range creds {
+            resp = append(resp, fiber.Map{
+                "id":         cred.ID,
+                "name":       cred.Name,           // friendly name
+                "createdAt":  cred.CreatedAt,
+            })
+        }
+        return c.JSON(resp)
+    }
+}
+
+func DeletePasskeyHandler(repo storage.Repository) fiber.Handler {
+    return func(c *fiber.Ctx) error {
+        userID, _ := c.Locals("clerk_id").(string)
+        user, err := repo.FindUserByClerkID(userID)
+        if err != nil {
+            return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+        }
+
+        passkeyID := c.Params("id") // assuming the route is /api/passkeys/:id
+
+        cred, err := repo.FindCredentialByUserID(passkeyID)
+        if err != nil {
+            return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "Passkey not found"})
+        }
+
+        // Make sure the passkey belongs to the requesting user
+        if cred.UserID != user.ID.String() {
+            return c.Status(http.StatusForbidden).JSON(fiber.Map{"error": "You do not have permission to delete this passkey"})
+        }
+
+        if err := repo.DeleteCredential(passkeyID); err != nil {
+            return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete passkey"})
+        }
+
+        return c.JSON(fiber.Map{"success": true, "message": "Passkey deleted successfully"})
+    }
 }
