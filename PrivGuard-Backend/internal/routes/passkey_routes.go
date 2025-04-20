@@ -14,12 +14,24 @@ func RegisterPasskeyRoutes(router fiber.Router, repo storage.Repository, wa *web
 
 	auth := router.Group("/auth", middleware.AuthMiddleware(repo))
 
+	// TOTP setup & verify
+	auth.Get("/totp/setup",
+		middleware.UserRateLimit(repo, 10, 1*time.Minute, "totp_setup"),
+		handlers.GetTOTPSetupHandler(repo))
 
-	 // TOTP setup & verify
-	 auth.Get("/totp/setup", handlers.GetTOTPSetupHandler(repo))
-	 auth.Post("/totp/verify", handlers.VerifyTOTPHandler(repo))
+	auth.Post("/totp/verify",
+		middleware.UserRateLimit(repo, 20, 1*time.Minute, "totp_verify"),
+		handlers.VerifyTOTPHandler(repo))
 
+	auth.Get("/totp/check",
+		middleware.UserRateLimit(repo, 20, 1*time.Minute, "totp_check"),
+		handlers.CheckTOTPexist(repo))
 
+	//Get Passkeys
+	auth.Get("/passkeys", handlers.GetPasskeysHandler(repo))
+	auth.Delete("/passkeys/:id",  handlers.DeletePasskeyHandler(repo))
+
+	//Passkey Register & Login
 	auth.Post("/register/start",
 		middleware.UserRateLimit(repo, 20, 1*time.Minute, "register_start"),
 		handlers.StartRegistrationHandler(repo, wa))
