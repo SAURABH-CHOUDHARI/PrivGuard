@@ -1,11 +1,12 @@
 import { useAuth } from "@clerk/clerk-react";
 import { JSX, useState } from "react";
-import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
+import { startAuthentication } from "@simplewebauthn/browser";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import Navbar from "./Navbar";
+import { Link } from "react-router-dom";
 
 // ✅ Fixed HOC with proper typing
 export function withPasskeyAuth<P extends JSX.IntrinsicAttributes>(
@@ -16,41 +17,6 @@ export function withPasskeyAuth<P extends JSX.IntrinsicAttributes>(
         const [loading, setLoading] = useState(false);
         const [authenticated, setAuthenticated] = useState(false);
         const [error, setError] = useState("");
-
-        // Registration flow
-        const handleRegister = async () => {
-            setLoading(true);
-            try {
-                const token = await getToken({ template: "new" });
-
-                const res = await axios.post(
-                    `${import.meta.env.VITE_BACKEND_ADDR}/api/auth/register/start`,
-                    {},
-                    {
-                        headers: { Authorization: token },
-                        withCredentials: true,
-                    }
-                );
-
-                const attResp = await startRegistration(res.data.publicKey.publicKey);
-
-                await axios.post(
-                    `${import.meta.env.VITE_BACKEND_ADDR}/api/auth/register/finish`,
-                    attResp,
-                    {
-                        headers: { Authorization: token },
-                        withCredentials: true,
-                    }
-                );
-
-                toast.success("Passkey registered successfully!");
-            } catch (err: any) {
-                const msg = err?.response?.data?.error || err.message || "Registration failed";
-                toast.error(msg);
-            } finally {
-                setLoading(false);
-            }
-        };
 
         // Login flow
         const handleLogin = async () => {
@@ -129,17 +95,24 @@ export function withPasskeyAuth<P extends JSX.IntrinsicAttributes>(
             <>
                 <Navbar />
                 <Card className="max-w-sm mx-auto mt-10 shadow-lg">
-                    <CardContent className="p-6 space-y-4">
+                    <CardContent className="p-6 space-y-4 text-center">
                         <h2 className="text-xl font-semibold">Secure your account</h2>
-                        <div className="space-y-2">
-                            <Button onClick={handleRegister} disabled={loading} className="w-full">
-                                {loading ? "Registering..." : "Register Passkey"}
-                            </Button>
-                            <Button onClick={handleLogin} disabled={loading} variant="outline" className="w-full">
-                                {loading ? "Authenticating..." : "Login with Passkey"}
-                            </Button>
-                        </div>
+                        <p className="text-sm text-gray-500">Login with your registered passkey</p>
+                        <Button
+                            onClick={handleLogin}
+                            disabled={loading}
+                            variant="outline"
+                            className="w-full"
+                        >
+                            {loading ? "Authenticating..." : "Login with Passkey"}
+                        </Button>
                     </CardContent>
+                    <CardFooter className="justify-center text-sm text-muted-foreground">
+                        Don’t have a passkey?{" "}
+                        <Link to="/security" className="ml-1 underline text-primary">
+                            Set it up here
+                        </Link>
+                    </CardFooter>
                 </Card>
             </>
         );
