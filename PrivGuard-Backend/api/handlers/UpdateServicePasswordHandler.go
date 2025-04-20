@@ -13,6 +13,7 @@ func UpdateServicePasswordHandler(repo storage.Repository) fiber.Handler {
 
 		var req struct {
 			Password string `json:"password"`
+			Strength int `json:"strength"`
 		}
 
 		if err := c.BodyParser(&req); err != nil {
@@ -27,7 +28,7 @@ func UpdateServicePasswordHandler(repo storage.Repository) fiber.Handler {
 			})
 		}
 
-		err := services.UpdateServicePassword(repo, userID, serviceID, req.Password)
+		err := services.UpdateServicePassword(repo, userID, serviceID, req.Password, int8(req.Strength))
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": err.Error(),
