@@ -2,6 +2,9 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
+	"gorm.io/gorm"
 	"encoding/json"
 	"strings"
 
@@ -18,8 +21,8 @@ func GetTOTPSetupHandler(repo storage.Repository) fiber.Handler {
 		userID := c.Locals("user_id").(string)
 		clerkID := c.Locals("clerk_id").(string)
 
-		// Fetch user data from Redis using the userID (this assumes you're using Redis for user cache)
-		cacheKey := "user:" + clerkID // Assuming you're storing users with the key "user:{userID}"
+		// Fetch user data from Redis
+		cacheKey := "user:" + clerkID
 		cachedUser, err := repo.RedisClient.Get(c.Context(), cacheKey).Result()
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -27,19 +30,33 @@ func GetTOTPSetupHandler(repo storage.Repository) fiber.Handler {
 			})
 		}
 
-		// Assuming cachedUser is a JSON string and can be unmarshalled into a struct
 		var user struct {
 			FirstName string `json:"FirstName"`
 		}
-
-		err = json.Unmarshal([]byte(cachedUser), &user)
-		if err != nil {
+		if err := json.Unmarshal([]byte(cachedUser), &user); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "Failed to unmarshal user data",
 			})
 		}
 
-		// Generate TOTP secret and URI
+		// Check if TOTP secret already exists
+		var existingSecret models.TOTPSecret
+		err = repo.DB.Where("user_id = ?", userID).First(&existingSecret).Error
+		if err == nil {
+			// Secret already exists, return existing URI
+			provisioningURI := fmt.Sprintf(
+				"otpauth://totp/PrivGuard:%s?secret=%s&issuer=PrivGuard",
+				user.FirstName, existingSecret.Secret,
+			)
+			return c.JSON(fiber.Map{
+				"provisioning_uri": provisioningURI,
+			})
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(500).JSON(fiber.Map{"error": "Failed to query TOTP secret"})
+		}
+
+		// Generate and store a new secret
 		secret, uri, err := services.GenerateTOTP(userID)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -47,29 +64,24 @@ func GetTOTPSetupHandler(repo storage.Repository) fiber.Handler {
 			})
 		}
 
-		// Replace user ID in URI with user’s name (e.g., "PrivGuard:FirstName LastName")
 		provisioningURI := strings.Replace(uri, "PrivGuard:"+userID, "PrivGuard:"+user.FirstName, 1)
 
-		// Save or update TOTP secret in DB (set Enabled = false)
-		repo.DB.Where("user_id = ?", userID).Delete(&models.TOTPSecret{}) // clear existing
-
-		err = repo.DB.Create(&models.TOTPSecret{
+		newSecret := models.TOTPSecret{
 			UserID:    userID,
 			Secret:    secret,
 			Enabled:   false,
 			CreatedAt: time.Now(),
-		}).Error
-
-		if err != nil {
+		}
+		if err := repo.DB.Create(&newSecret).Error; err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "Could not save secret"})
 		}
 
-		// Return the provisioning URI with user name
 		return c.JSON(fiber.Map{
 			"provisioning_uri": provisioningURI,
 		})
 	}
 }
+
 
 func VerifyTOTPHandler(repo storage.Repository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -95,5 +107,24 @@ func VerifyTOTPHandler(repo storage.Repository) fiber.Handler {
 		repo.DB.Save(&totp)
 
 		return c.JSON(fiber.Map{"message": "TOTP verified and enabled"})
+	}
+}
+
+func CheckTOTPexist(repo storage.Repository) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		userID := c.Locals("user_id").(string)
+
+		var totp models.TOTPSecret
+		result := repo.DB.Where("user_id = ?", userID).First(&totp)
+
+		if result.RowsAffected == 0 {
+			return c.JSON(fiber.Map{"message": "TOTP does not exist"})
+		}
+
+		if result.Error != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Internal server error"})
+		}
+
+		return c.JSON(fiber.Map{"message": "TOTP is present"})
 	}
 }
