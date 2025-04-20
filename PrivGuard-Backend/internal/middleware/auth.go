@@ -22,7 +22,7 @@ func AuthMiddleware(repo storage.Repository) fiber.Handler {
 
 		token, err := clerk.VerifyToken(tokenString)
 		if err != nil {
-			fmt.Println("❌ Token verification failed:", err)
+			fmt.Println(" Token verification failed:", err)
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid Token",
 			})
