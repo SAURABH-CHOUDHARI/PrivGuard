@@ -64,11 +64,11 @@ export default function EnterprisePasswordVault() {
         generatePassword();
     };
 
-    const getStrengthLabel = () => {
-        if (passwordStrength >= 80) return "Strong";
-        if (passwordStrength >= 50) return "Medium";
-        return "Weak";
-    };
+        const getStrengthLabel = () => {
+            if (passwordStrength >= 80) return "Strong";
+            if (passwordStrength >= 50) return "Medium";
+            return "Weak";
+        };
 
     const getStrengthColor = () => {
         if (passwordStrength >= 80) return "bg-green-500";
@@ -93,6 +93,7 @@ export default function EnterprisePasswordVault() {
                     logo: selectedService.logo,
                     password,
                     notes,
+                    strength: passwordStrength
                 },
                 {
                     headers: {
