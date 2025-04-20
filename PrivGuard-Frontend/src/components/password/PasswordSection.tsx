@@ -29,7 +29,7 @@ import {
 interface Props {
     password: string;
     passwordId: string;
-    onUpdatePassword: (newPassword: string) => Promise<void>;
+    onUpdatePassword: (newPassword: string, strength: number) => Promise<void>;
 }
 
 export default function PasswordSection({ password,  onUpdatePassword }: Props) {
@@ -100,7 +100,7 @@ export default function PasswordSection({ password,  onUpdatePassword }: Props) 
 
     const confirmSave = async () => {
         try {
-            await onUpdatePassword(currentPassword);
+            await onUpdatePassword(currentPassword, passwordStrength);
             setOriginalPassword(currentPassword);
             toast.success("Password updated successfully");
         } catch (error) {

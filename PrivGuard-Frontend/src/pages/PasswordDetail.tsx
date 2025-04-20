@@ -66,7 +66,7 @@ export default function PasswordDetailPage() {
                 { headers: { Authorization: token } }
             );
 
-            setEntry((prev) => (prev ? { ...prev, notes } : prev)); 
+            setEntry((prev) => (prev ? { ...prev, notes } : prev));
             toast.success("Notes updated successfully");
         } catch (err) {
             toast.error("Failed to update notes");
@@ -74,12 +74,15 @@ export default function PasswordDetailPage() {
         }
     };
 
-    const handleUpdatePassword = async (newPassword: string) => {
+    const handleUpdatePassword = async (newPassword: string, strength: number) => {
         try {
             const token = await getToken({ template: "new" });
             await axios.post(
                 `${import.meta.env.VITE_BACKEND_ADDR}/api/protected/vault/${id}/update-password`,
-                { password: newPassword },
+                {
+                    password: newPassword,
+                    strength
+                },
                 { headers: { Authorization: token } }
             );
 

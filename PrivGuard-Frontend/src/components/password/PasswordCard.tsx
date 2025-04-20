@@ -27,7 +27,7 @@ interface PasswordCardProps {
     };
     onDelete: (id: string) => void;
     onUpdateNotes: ( notes: string) => Promise<void>;
-    onUpdatePassword: ( newPassword: string) => Promise<void>;
+    onUpdatePassword: (newPassword: string, strength: number) => Promise<void>; 
 }
 
 export default function PasswordCard({
