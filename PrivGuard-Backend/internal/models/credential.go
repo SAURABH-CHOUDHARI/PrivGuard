@@ -15,7 +15,7 @@ type WebAuthnCredential struct {
     AAGUID        string
     SignCount     uint32
     CloneWarning  bool
-    DeviceName    string    // ← friendly name supplied by client
+    Name          string    // ← friendly name supplied by client
     CreatedAt     time.Time
     UpdatedAt     time.Time
 }
