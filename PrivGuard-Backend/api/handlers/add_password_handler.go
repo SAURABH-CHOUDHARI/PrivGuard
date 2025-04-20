@@ -12,6 +12,7 @@ type AddPasswordRequest struct {
 	Logo        string `json:"logo"`
 	Password    string `json:"password"`
 	Notes       string `json:"notes"`
+	StrengthScore int  `json:"strength"`
 }
 
 func AddPasswordHandler(repo storage.Repository) fiber.Handler {
@@ -31,7 +32,7 @@ func AddPasswordHandler(repo storage.Repository) fiber.Handler {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 		}
 
-		err := services.AddPasswordToVault(repo, userID, req.ServiceName, req.Domain, req.Logo, req.Password, req.Notes)
+		err := services.AddPasswordToVault(repo, userID, req.ServiceName, req.Domain, req.Logo, req.Password, req.Notes, int8(req.StrengthScore))
 
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save password"})
