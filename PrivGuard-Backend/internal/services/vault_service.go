@@ -15,7 +15,7 @@ import (
 
 const vaultTTL = 7 * 24 * time.Hour // 7 days
 
-func AddPasswordToVault(repo storage.Repository, userID string, serviceName, domain, logo, rawPassword, notes string) error {
+func AddPasswordToVault(repo storage.Repository, userID string, serviceName, domain, logo, rawPassword, notes string, strengthScore int8) error {
 	log.Println("🔧 Starting AddPasswordToVault...")
 
 	ctx := context.Background()
@@ -66,6 +66,7 @@ func AddPasswordToVault(repo storage.Repository, userID string, serviceName, dom
 		LogoURL:           logo,
 		EncryptedPassword: encryptedPass,
 		Notes:             notes,
+		StrengthScore:     strengthScore,
 		IV:                iv,
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
@@ -213,7 +214,7 @@ func UpdateServiceNotes(repo storage.Repository, userID, serviceID, newNotes str
 	return nil
 }
 
-func UpdateServicePassword(repo storage.Repository, userID, serviceID, newRawPassword string) error {
+func UpdateServicePassword(repo storage.Repository, userID, serviceID, newRawPassword string, strength int8) error {
 	ctx := context.Background()
 	db := repo.DB
 	redis := repo.RedisClient
@@ -251,6 +252,7 @@ func UpdateServicePassword(repo storage.Repository, userID, serviceID, newRawPas
 			"encrypted_password": encryptedPass,
 			"iv":                 iv,
 			"updated_at":         time.Now(),
+			"StrengthScore":       strength, 
 		}).Error; err != nil {
 		return fmt.Errorf("failed to update encrypted password: %w", err)
 	}
