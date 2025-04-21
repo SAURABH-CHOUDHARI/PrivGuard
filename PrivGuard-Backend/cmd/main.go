@@ -36,6 +36,9 @@ func main() {
 		log.Fatal("❌ Could not connect to DB")
 	}
 
+	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
+
+
 	// Conditional migration
 	if os.Getenv("RUN_MIGRATIONS") == "true" {
 		migrations.AutoMigrate(db)
