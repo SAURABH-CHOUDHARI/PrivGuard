@@ -3,11 +3,12 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PanelBottomClose, CalendarClock, KeyRound, Info, ChevronRight, Download, Share2 } from "lucide-react";
+import { PanelBottomClose, CalendarClock, KeyRound, Info, ChevronRight, Download } from "lucide-react";
 import BreachDetailsTable from "./BreachDetailsTable";
 import BreachTimeline from "./BreachTimeline";
 import PasswordAnalysis from "./PasswordAnalysis";
 import { BreachResponse } from "@/types/breach-types";
+import { exportBreachReport } from "@/utiils/Pdfmaker";
 
 interface BreachDetailsTabsProps {
     data: BreachResponse;
@@ -82,13 +83,9 @@ export default function BreachDetailsTabs({ data }: BreachDetailsTabsProps) {
                             </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" className="gap-1">
+                            <Button variant="outline" size="sm" className="gap-1" onClick={() => exportBreachReport(data)}>
                                 <Download className="h-4 w-4" />
                                 <span className="hidden sm:inline">Export</span>
-                            </Button>
-                            <Button variant="outline" size="sm" className="gap-1">
-                                <Share2 className="h-4 w-4" />
-                                <span className="hidden sm:inline">Share</span>
                             </Button>
                         </div>
                     </div>

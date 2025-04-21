@@ -40,6 +40,7 @@ export default function CheckBreaches() {
             if (response.data.Error === "Not found") {
                 setBreachData(null);
             } else {
+                console.log(response.data)
                 setBreachData(response.data);
             }
         } catch (error) {
