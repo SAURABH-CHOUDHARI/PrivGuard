@@ -1,4 +1,3 @@
-// PasskeyManagementTab.tsx
 import {
     AlertDialog,
     AlertDialogAction,
@@ -10,7 +9,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/clerk-react";
 import { startRegistration } from "@simplewebauthn/browser";
-import { useEffect } from "react";
 
 // This will be replaced with your API data
 interface Passkey {
@@ -35,22 +33,27 @@ interface Passkey {
 const PasskeyManagementTab = () => {
     const { getToken } = useAuth();
     const [passkeys, setPasskeys] = useState<Passkey[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const fetchPasskeys = async () => {
+        setIsLoading(true);
         try {
             const token = await getToken({ template: "new" });
             const res = await axios.get(`${import.meta.env.VITE_BACKEND_ADDR}/api/auth/passkeys`, {
                 headers: { Authorization: token },
                 withCredentials: true,
             });
-            setPasskeys(res.data); 
+            setPasskeys(res.data || []);
         } catch (err: any) {
             toast.error("Failed to load passkeys");
+            setPasskeys([]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchPasskeys()
+        fetchPasskeys();
     }, []);
 
     const handleAddPasskey = async (name: string) => {
@@ -70,7 +73,6 @@ const PasskeyManagementTab = () => {
 
             await axios.post(
                 `${import.meta.env.VITE_BACKEND_ADDR}/api/auth/register/finish`,
-
                 {
                     ...attResp,
                     name
@@ -103,7 +105,8 @@ const PasskeyManagementTab = () => {
         }
     };
 
-    const MotionCard = motion.create(Card);
+    // Create a motion component from Card
+    const MotionCard = motion(Card);
 
     return (
         <MotionCard
@@ -118,12 +121,23 @@ const PasskeyManagementTab = () => {
                         <KeyRound className="h-4 w-4 text-primary" />
                         <CardTitle className="text-base font-medium">Passkey Management</CardTitle>
                     </div>
-                    <AddPasskeyDialog onAddPasskey={handleAddPasskey} />
+                    <AddPasskeyDialog
+                        onAddPasskey={handleAddPasskey}
+                        disabled={passkeys.length >= 2}
+                    />
                 </div>
                 <CardDescription className="text-xs">Manage your passkeys for passwordless authentication</CardDescription>
             </CardHeader>
             <CardContent>
-                {passkeys.length > 0 ? (
+                {isLoading ? (
+                    <div className="flex justify-center py-6">
+                        <div className="animate-pulse flex space-x-2">
+                            <div className="h-2 w-2 bg-primary rounded-full"></div>
+                            <div className="h-2 w-2 bg-primary rounded-full"></div>
+                            <div className="h-2 w-2 bg-primary rounded-full"></div>
+                        </div>
+                    </div>
+                ) : passkeys.length > 0 ? (
                     <div className="space-y-3">
                         {passkeys.map((passkey) => (
                             <PasskeyItem
@@ -148,18 +162,35 @@ const PasskeyManagementTab = () => {
 };
 
 // Helper components for PasskeyManagementTab
-const AddPasskeyDialog = ({ onAddPasskey }: { onAddPasskey: (name: string) => void }) => {
+const AddPasskeyDialog = ({
+    onAddPasskey,
+    disabled
+}: {
+    onAddPasskey: (name: string) => void;
+    disabled?: boolean;
+}) => {
     const [passKeyName, setPassKeyName] = useState("");
+    const [open, setOpen] = useState(false);
 
     const handleSubmit = () => {
         if (passKeyName.trim()) {
             onAddPasskey(passKeyName);
             setPassKeyName("");
+            setOpen(false);
         }
     };
 
+    if (disabled) {
+        return (
+            <Button disabled size="sm" className="h-7 text-xs opacity-50 cursor-not-allowed" title="Limit reached">
+                <Plus className="mr-1 h-3 w-3" />
+                Max 2 Passkeys
+            </Button>
+        );
+    }
+
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button size="sm" className="h-7 text-xs">
                     <Plus className="mr-1 h-3 w-3" />
@@ -193,7 +224,7 @@ const AddPasskeyDialog = ({ onAddPasskey }: { onAddPasskey: (name: string) => vo
                     </Alert>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" size="sm" className="text-xs">Cancel</Button>
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => setOpen(false)}>Cancel</Button>
                     <Button size="sm" className="text-xs" onClick={handleSubmit}>
                         <KeyRound className="mr-1 h-3 w-3" />
                         Register
@@ -205,6 +236,8 @@ const AddPasskeyDialog = ({ onAddPasskey }: { onAddPasskey: (name: string) => vo
 };
 
 const PasskeyItem = ({ passkey, onRemove }: { passkey: Passkey, onRemove: () => void }) => {
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    
     return (
         <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg border border-border/50">
             <div className="flex items-center gap-2">
@@ -219,7 +252,7 @@ const PasskeyItem = ({ passkey, onRemove }: { passkey: Passkey, onRemove: () => 
                 </div>
             </div>
 
-            <AlertDialog>
+            <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
                 <AlertDialogTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                         <Trash2 size={14} className="text-red-500" />
@@ -234,8 +267,14 @@ const PasskeyItem = ({ passkey, onRemove }: { passkey: Passkey, onRemove: () => 
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel className="text-xs">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={onRemove} className="bg-red-600 hover:bg-red-700 text-xs">
+                        <AlertDialogCancel className="text-xs" onClick={() => setIsConfirmOpen(false)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={() => {
+                                onRemove();
+                                setIsConfirmOpen(false);
+                            }} 
+                            className="bg-red-600 hover:bg-red-700 text-xs"
+                        >
                             Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>
