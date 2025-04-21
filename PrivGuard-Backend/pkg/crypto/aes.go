@@ -7,9 +7,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"io"
-	"os"
 	"fmt"
+	"io"
+	"sync"
+
+	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/security"
 )
 
 // EncryptAES encrypts plaintext using AES-256 with a given key and returns base64 ciphertext and IV
@@ -23,20 +25,24 @@ func EncryptAES(plaintext, key []byte) (string, string, error) {
 		return "", "", err
 	}
 
-	iv := make([]byte, aes.BlockSize)
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
 		return "", "", err
 	}
 
-	ciphertext := make([]byte, len(plaintext))
-	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext, plaintext)
+	nonce := make([]byte, aead.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", "", err
+	}
 
-	return base64.StdEncoding.EncodeToString(ciphertext), base64.StdEncoding.EncodeToString(iv), nil
+	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
+
+	return base64.StdEncoding.EncodeToString(ciphertext), base64.StdEncoding.EncodeToString(nonce), nil
 }
 
+
 // DecryptAES decrypts a base64 ciphertext using AES-256 with the given key and IV
-func DecryptAES(ciphertextB64, ivB64 string, key []byte) (string, error) {
+func DecryptAES(ciphertextB64, nonceB64 string, key []byte) (string, error) {
 	if len(key) != 32 {
 		return "", errors.New("key must be 32 bytes for AES-256")
 	}
@@ -46,7 +52,7 @@ func DecryptAES(ciphertextB64, ivB64 string, key []byte) (string, error) {
 		return "", err
 	}
 
-	iv, err := base64.StdEncoding.DecodeString(ivB64)
+	nonce, err := base64.StdEncoding.DecodeString(nonceB64)
 	if err != nil {
 		return "", err
 	}
@@ -56,23 +62,49 @@ func DecryptAES(ciphertextB64, ivB64 string, key []byte) (string, error) {
 		return "", err
 	}
 
-	plaintext := make([]byte, len(ciphertext))
-	stream := cipher.NewCFBDecrypter(block, iv)
-	stream.XORKeyStream(plaintext, ciphertext)
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", err
+	}
 
 	return string(plaintext), nil
 }
 
-// LoadAESKey fetches AES key from env (or future SecretManager)
+
+var (
+	cachedKey []byte
+	loadOnce  sync.Once
+	loadErr   error
+)
+
 func LoadAESKey() ([]byte, error) {
-	key, err := base64.StdEncoding.DecodeString(os.Getenv("MASTER_ENCRYPTION_KEY"))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode MASTER_ENCRYPTION_KEY: %w", err)
-	}
+	loadOnce.Do(func() {
+		const secretName = "privguard/master-key"
 
-	if len(key) != 32 {
-		return nil, errors.New("MASTER_ENCRYPTION_KEY must be exactly 32 bytes after base64 decoding")
-	}
+		base64Key, err := security.GetMasterKey(secretName)
+		if err != nil {
+			loadErr = fmt.Errorf("failed to fetch master key from secrets manager: %w", err)
+			return
+		}
 
-	return key, nil
+		key, err := base64.StdEncoding.DecodeString(base64Key)
+		if err != nil {
+			loadErr = fmt.Errorf("failed to decode MASTER_ENCRYPTION_KEY: %w", err)
+			return
+		}
+
+		if len(key) != 32 {
+			loadErr = errors.New("MASTER_ENCRYPTION_KEY must be exactly 32 bytes after base64 decoding")
+			return
+		}
+
+		cachedKey = key
+	})
+
+	return cachedKey, loadErr
 }
