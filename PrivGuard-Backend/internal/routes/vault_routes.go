@@ -10,7 +10,7 @@ import (
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/storage"
 )
 
-func RegisterRoutes(router fiber.Router, repo storage.Repository) {
+func VaultRoutes(router fiber.Router, repo storage.Repository) {
 	protected := router.Group("/protected", middleware.AuthMiddleware(repo))
 
 	// Vault routes group
