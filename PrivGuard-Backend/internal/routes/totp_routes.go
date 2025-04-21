@@ -22,9 +22,9 @@ func TotpRoutes(router fiber.Router, repo storage.Repository) {
 		handlers.VerifyTOTPHandler(repo))
 
 	//Check TOTP exist or not	
-	auth.Get("/totp/check",
+	auth.Get("/totp/status",
 		middleware.UserRateLimit(repo, 20, 1*time.Minute, "totp_check"),
-		handlers.CheckTOTPexist(repo))
+		handlers.GetTOTPStatusHandler(repo))
 		
 }
 
