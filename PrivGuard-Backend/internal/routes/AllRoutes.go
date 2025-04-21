@@ -12,9 +12,13 @@ func SetupRoutes(app *fiber.App, repo storage.Repository, wa *webauthn.WebAuthn)
     // Base API group
 	api := app.Group("/api")
     
-    // Set up authentication routes
-    RegisterPasskeyRoutes(api, repo, wa)
     
-    // Set up protected routes
-    RegisterRoutes(api, repo)
+    PasskeyRoutes(api, repo, wa)
+    
+    VaultRoutes(api, repo)
+
+    TotpRoutes(api, repo)
+
+    AssesmentRoutes(api, repo)
+
 }
