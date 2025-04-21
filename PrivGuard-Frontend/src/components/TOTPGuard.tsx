@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+// src/components/TOTPGuard.tsx
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTOTP } from "@/context/TOTPContext";
-import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
+import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -11,68 +13,73 @@ interface TOTPGuardProps {
     children: React.ReactNode;
 }
 
-const TOTPGuard = ({ children }: TOTPGuardProps) => {
-    const { isTOTPEnabled } = useTOTP();
+const TOTPGuard: React.FC<TOTPGuardProps> = ({ children }) => {
+    // ✔️ Call the hook with ()
+    const { isConfirmed } = useTOTP();
     const { getToken } = useAuth();
-    const [code, setCode] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [verified, setVerified] = useState(false);
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        // auto-check and maybe redirect logic could go here
-    }, [isTOTPEnabled]);
+    const [code, setCode] = useState<string>("");
+    const [loading, setLoading] = useState<boolean>(false);
+    const [verified, setVerified] = useState<boolean>(false);
 
+    // 1) still loading  
+    if (isConfirmed === null) {
+        return null; // or a spinner
+    }
 
-    const handleVerify = async () => {
-        setLoading(true);
-        try {
-            const token = await getToken();
-            const { data } = await axios.post(
-                `${import.meta.env.VITE_BACKEND_ADDR}/api/auth/totp/verify`,
-                { code },
-                {
-                    headers: { Authorization: token },
-                    withCredentials: true,
-                }
-            );
-            if (data.message) {
-                toast.success("TOTP Verified");
-                setVerified(true);
-            } else {
-                toast.error("Invalid code");
-            }
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || "Verification failed");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (!isTOTPEnabled) {
+    // 2) not scanned QR yet
+    if (isConfirmed === false) {
         return (
             <div className="max-w-md mx-auto text-center p-6 mt-10">
                 <h2 className="text-xl font-semibold mb-4">Set up TOTP to access this page</h2>
-                <Button asChild>
-                    <a href="/totp-setup">Go to TOTP Setup</a>
+                <Button onClick={() => navigate("/totp-setup")}>
+                    Go to TOTP Setup
                 </Button>
             </div>
         );
     }
 
+    // 3) scanned but not yet verified in _this_ session
     if (!verified) {
+        const handleVerify = async () => {
+            setLoading(true);
+            try {
+                const token = await getToken();
+                await axios.post(
+                    `${import.meta.env.VITE_BACKEND_ADDR}/api/auth/totp/verify`,
+                    { code },
+                    {
+                        headers: { Authorization: token },
+                        withCredentials: true,
+                    }
+                );
+                toast.success("TOTP Verified");
+                setVerified(true);
+            } catch (err: any) {
+                toast.error(err.response?.data?.error || "Verification failed");
+            } finally {
+                setLoading(false);
+            }
+        };
+
         return (
             <>
-            <Navbar/>
+                <Navbar />
                 <div className="max-w-sm mx-auto mt-10 space-y-4 text-center">
                     <h2 className="text-lg font-semibold">Enter your TOTP code</h2>
                     <Input
-                        placeholder="6-digit code"
+                        placeholder="6‑digit code"
                         maxLength={6}
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
                         className="text-center"
                     />
-                    <Button onClick={handleVerify} disabled={loading} className="w-full">
+                    <Button
+                        onClick={handleVerify}
+                        disabled={loading}
+                        className="w-full"
+                    >
                         {loading ? "Verifying..." : "Verify"}
                     </Button>
                 </div>
@@ -80,6 +87,7 @@ const TOTPGuard = ({ children }: TOTPGuardProps) => {
         );
     }
 
+    // 4) verified → render protected content
     return <>{children}</>;
 };
 
