@@ -140,7 +140,7 @@ const SecurityStatusCardTab = () => {
                             <SecurityFeatureProgress
                                 icon={<Lock size={16} className="text-emerald-500" />}
                                 name="Password Strength"
-                                status={`${assessment?.average_score ?? 0}%`}
+                                status={`${(assessment?.average_score ?? 0).toFixed(1)}%`}
                                 progress={assessment?.average_score ?? 0}
                                 variant={getColor(assessment?.average_score || 0) as "red" | "amber" | "emerald"}
                             />
