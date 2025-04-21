@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Building, Calendar, Shield, Search, ArrowUpDown, Download } from "lucide-react";
+import { Building, Calendar, Shield, Search, ArrowUpDown } from "lucide-react";
 import { useState } from "react";
 import { BreachDetails } from "@/types/breach-types";
 import { Input } from "@/components/ui/input";
@@ -118,9 +118,7 @@ export default function BreachDetailsTable({ breaches }: BreachDetailsTableProps
                                 className="pl-9 w-full md:w-64"
                             />
                         </div>
-                        <Button variant="outline" size="icon" title="Export data">
-                            <Download className="h-4 w-4" />
-                        </Button>
+    
                     </div>
                 </div>
             </CardHeader>
