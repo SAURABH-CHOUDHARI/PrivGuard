@@ -106,7 +106,7 @@ const PasskeyManagementTab = () => {
     };
 
     // Create a motion component from Card
-    const MotionCard = motion(Card);
+    const MotionCard = motion.create(Card);
 
     return (
         <MotionCard
