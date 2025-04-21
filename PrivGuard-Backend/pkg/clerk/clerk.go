@@ -1,15 +1,19 @@
 package clerk
 
 import (
+	"context"
 	"crypto/rsa"
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"sync"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/lestrrat-go/jwx/jwk"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
 var (
@@ -18,19 +22,40 @@ var (
 	jwksFetchErr  error
 )
 
-// getClerkJWKURL loads and validates the Clerk JWK URL from env
-func getClerkJWKURL() (string, error) {
-	url := os.Getenv("CLERK_JWK_URL")
-	if url == "" {
-		return "", errors.New("CLERK_JWK_URL is not set in the environment")
-	}
-	return url, nil
+const clerkJWKSecretName = "privguard/clerk-jwks-url"
+
+var (
+	secretFetchOnce sync.Once
+	cachedJWKURL    string
+	secretFetchErr  error
+)
+
+func getClerkJWKURLFromSecretsManager() (string, error) {
+	secretFetchOnce.Do(func() {
+		cfg, err := config.LoadDefaultConfig(context.Background())
+		if err != nil {
+			secretFetchErr = fmt.Errorf("failed to load AWS config: %w", err)
+			return
+		}
+
+		client := secretsmanager.NewFromConfig(cfg)
+		out, err := client.GetSecretValue(context.Background(), &secretsmanager.GetSecretValueInput{
+			SecretId: aws.String(clerkJWKSecretName),
+		})
+		if err != nil {
+			secretFetchErr = fmt.Errorf("failed to get secret: %w", err)
+			return
+		}
+
+		cachedJWKURL = aws.ToString(out.SecretString)
+	})
+
+	return cachedJWKURL, secretFetchErr
 }
 
-// Fetch and cache Clerk's JWKS (runs only once)
 func getClerkJWKS() error {
 	jwksFetchOnce.Do(func() {
-		url, err := getClerkJWKURL()
+		url, err := getClerkJWKURLFromSecretsManager()
 		if err != nil {
 			jwksFetchErr = err
 			return
@@ -48,7 +73,6 @@ func getClerkJWKS() error {
 	return jwksFetchErr
 }
 
-// VerifyToken validates a Clerk-issued JWT
 func VerifyToken(tokenString string) (*jwt.Token, error) {
 	if err := getClerkJWKS(); err != nil {
 		return nil, err
