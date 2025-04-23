@@ -31,12 +31,15 @@ const TOTPGuard: React.FC<TOTPGuardProps> = ({ children }) => {
     // 2) not scanned QR yet
     if (isConfirmed === false) {
         return (
+            <>
+            <Navbar/>
             <div className="max-w-md mx-auto text-center p-6 mt-10">
                 <h2 className="text-xl font-semibold mb-4">Set up TOTP to access this page</h2>
                 <Button onClick={() => navigate("/totp-setup")}>
                     Go to TOTP Setup
                 </Button>
             </div>
+            </>
         );
     }
 
