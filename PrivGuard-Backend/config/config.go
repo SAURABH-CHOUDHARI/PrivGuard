@@ -14,7 +14,7 @@ var Ctx = context.Background()
 func InitRedis() *redis.Client {
 	redisAddr := os.Getenv("REDIS_URL")
 	if redisAddr == "" {
-		redisAddr = "localhost:6379" // Fallback
+		redisAddr = "redis:6379" // Fallback
 	}
 
 	rdb := redis.NewClient(&redis.Options{

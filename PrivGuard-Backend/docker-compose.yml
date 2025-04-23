@@ -1,6 +1,32 @@
 version: '3.8'
 
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://privguard:supersecret123@pgbouncer:6432/vaultdb
+      - DB_PORT=6432
+      - REDIS_URL=redis:6379
+      - PORT=8080
+      - RUN_MIGRATIONS=true
+      - WEBAUTHN_RPID=localhost
+      - WEBAUTHN_RP_NAME=PrivGuard
+      - WEBAUTHN_RP_ORIGINS=http://localhost:5173
+    volumes:
+      - ./.env:/app/.env:ro
+      - ~/.aws:/root/.aws:ro
+    depends_on:
+      - postgres
+      - redis
+      - pgbouncer
+    restart: unless-stopped
+
   postgres:
     image: postgres:15-alpine
     environment:
