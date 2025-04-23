@@ -5,49 +5,51 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import QRCode from "qrcode"; // NEW
+import QRCode from "qrcode";
 import Navbar from "@/components/Navbar";
 import { useTOTP } from "@/context/TOTPContext";
 import { useNavigate } from "react-router-dom";
 
 const TOTPSetup = () => {
-    const { isTOTPEnabled } = useTOTP();
+    const { enabled: isTOTPEnabled } = useTOTP();
     const { getToken } = useAuth();
     const [qrImage, setQrImage] = useState("");
     const [otp, setOtp] = useState("");
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-    const navigate = useNavigate(); 
+    // Redirect if already enabled
+    useEffect(() => {
+        if (isTOTPEnabled) {
+            toast.info("TOTP already present, redirecting...");
+            navigate("/");
+        }
+    }, [isTOTPEnabled, navigate]);
 
+    // Fetch QR code on mount
+    useEffect(() => {
+        const fetchQrCode = async () => {
+            try {
+                const token = await getToken();
+                const { data } = await axios.get(
+                    `${import.meta.env.VITE_BACKEND_ADDR}/api/auth/totp/setup`,
+                    {
+                        headers: { Authorization: token },
+                        withCredentials: true,
+                    }
+                );
+                const uri = data.provisioning_uri;
+                const imageUrl = await QRCode.toDataURL(uri);
+                setQrImage(imageUrl);
+            } catch (err) {
+                toast.error("Failed to load TOTP setup");
+            }
+        };
 
-    if(isTOTPEnabled){
-        toast.info("TOTP already present, can't access this route")
-        navigate('/')
-    }else{
-        useEffect(() => {
-            const fetchQrCode = async () => {
-                try {
-                    const token = await getToken();
-                    const { data } = await axios.get(
-                        `${import.meta.env.VITE_BACKEND_ADDR}/api/auth/totp/setup`,
-                        {
-                            headers: { Authorization: token },
-                            withCredentials: true,
-                        }
-                    );
-                    const uri = data.provisioning_uri;
-    
-                    // Generate QR code image from URI
-                    const imageUrl = await QRCode.toDataURL(uri);
-                    setQrImage(imageUrl);
-                } catch (err) {
-                    toast.error("Failed to load TOTP setup");
-                }
-            };
-    
+        if (!isTOTPEnabled) {
             fetchQrCode();
-        }, [getToken]);
-    }
+        }
+    }, [getToken, isTOTPEnabled]);
 
     const verifyOtp = async () => {
         try {
@@ -75,7 +77,6 @@ const TOTPSetup = () => {
         }
     };
 
-
     return (
         <>
             <Navbar />
@@ -83,7 +84,11 @@ const TOTPSetup = () => {
                 <CardContent className="p-6 space-y-6 text-center">
                     <h2 className="text-xl font-semibold">Set up TOTP (Google Authenticator)</h2>
                     {qrImage ? (
-                        <img src={qrImage} alt="Scan this QR code in Google Authenticator" className="mx-auto" />
+                        <img
+                            src={qrImage}
+                            alt="Scan this QR code in Google Authenticator"
+                            className="mx-auto"
+                        />
                     ) : (
                         <p>Loading QR Code...</p>
                     )}
