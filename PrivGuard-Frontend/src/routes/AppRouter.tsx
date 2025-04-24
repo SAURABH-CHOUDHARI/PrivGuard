@@ -42,7 +42,7 @@ const AppRouter = () => {
                 <Route path="/identity" element={<FakeIdentity />} />
                 <Route path="/checkpassword" element={<CheckPassword />} />
                 <Route path="/check-breaches" element={<CheckBreaches />} />
-                <Route path="/security" element={<ProtectedSecurityCenter />} />
+                <Route path="/security" element={<PrivateRoute><ProtectedSecurityCenter /></PrivateRoute>} />
                 <Route path="/totp-setup" element={<TOTPSetup/>}/>
             </Routes>
         </Router>
