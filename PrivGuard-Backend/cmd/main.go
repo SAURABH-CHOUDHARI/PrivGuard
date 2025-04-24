@@ -62,7 +62,9 @@ func main() {
 
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:5173", // your frontend origin
+		AllowOriginsFunc: func(origin string) bool {
+			return origin == "http://localhost:5173" || origin == "https://privguard.netlify.app"
+		},
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true,
 		AllowMethods:     "GET,POST,OPTIONS,DELETE", // include OPTIONS for preflight
