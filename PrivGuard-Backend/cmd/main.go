@@ -7,8 +7,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/joho/godotenv"
 
 	"github.com/SAURABH-CHOUDHARI/privguard-backend/config"
@@ -38,6 +38,7 @@ func main() {
 
 	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
 
+
 	// Conditional migration
 	if os.Getenv("RUN_MIGRATIONS") == "true" {
 		migrations.AutoMigrate(db)
@@ -59,8 +60,11 @@ func main() {
 		Expiration: 1 * time.Minute,
 	}))
 
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",
+		AllowOriginsFunc: func(origin string) bool {
+			return origin == "http://localhost:5173" || origin == "https://privguard.netlify.app"
+		},
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowCredentials: true,
 		AllowMethods:     "GET,POST,OPTIONS,DELETE", // include OPTIONS for preflight
@@ -68,6 +72,7 @@ func main() {
 
 	// Register all routes
 	routes.SetupRoutes(app, vaultRoutes, webauthn)
+
 
 	// Start the server
 	port := os.Getenv("PORT")
