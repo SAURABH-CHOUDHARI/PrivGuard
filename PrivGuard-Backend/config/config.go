@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"time"
+	"crypto/tls"
+
 
 	"github.com/redis/go-redis/v9"
 )
@@ -13,21 +15,22 @@ var Ctx = context.Background()
 
 func InitRedis() *redis.Client {
 	redisAddr := os.Getenv("REDIS_URL")
-	if redisAddr == "" {
-		redisAddr = "redis:6379" // Fallback
-	}
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:         redisAddr,
-		Password:     os.Getenv("DB_PASS"),
-		DB:           0,
+		Addr:     redisAddr,
+		Username: "default", // Upstash requires this
+		Password: os.Getenv("DB_PASS"),
+		DB:       0,
+
+		TLSConfig:    &tls.Config{},
+
 		// Performance optimizations
-		PoolSize:     100,                  // Increase from default (10) for high concurrency
-		MinIdleConns: 20,                   // Keep connections ready
-		PoolTimeout:  4 * time.Second,      // How long to wait for connection if pool is exhausted
-		ReadTimeout:  100 * time.Millisecond, // Lower read timeout for faster failure detection
-		WriteTimeout: 100 * time.Millisecond, // Lower write timeout
-		DialTimeout:  200 * time.Millisecond, // Connection establishment timeout
+		PoolSize:     100,
+		MinIdleConns: 20,
+		PoolTimeout:  4 * time.Second,
+		ReadTimeout:  100 * time.Millisecond,
+		WriteTimeout: 100 * time.Millisecond,
+		DialTimeout:  200 * time.Millisecond,
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
