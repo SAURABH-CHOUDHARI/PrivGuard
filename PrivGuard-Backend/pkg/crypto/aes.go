@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"os"
 
-	"github.com/SAURABH-CHOUDHARI/privguard-backend/pkg/security"
 )
 
 // EncryptAES encrypts plaintext using AES-256 with a given key and returns base64 ciphertext and IV
@@ -84,11 +84,10 @@ var (
 
 func LoadAESKey() ([]byte, error) {
 	loadOnce.Do(func() {
-		const secretName = "privguard/master-key"
-
-		base64Key, err := security.GetMasterKey(secretName)
-		if err != nil {
-			loadErr = fmt.Errorf("failed to fetch master key from secrets manager: %w", err)
+		// Get key from environment variable
+		base64Key := os.Getenv("MASTER_ENCRYPTION_KEY")
+		if base64Key == "" {
+			loadErr = errors.New("MASTER_ENCRYPTION_KEY environment variable not set")
 			return
 		}
 
