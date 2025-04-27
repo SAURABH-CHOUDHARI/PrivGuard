@@ -1,18 +1,11 @@
-# Final minimal Dockerfile
-
 FROM alpine:3.18
 
-# Install CA certs and timezone info
-RUN apk --no-cache add ca-certificates tzdata
+# Install only CA certs
+RUN apk --no-cache add ca-certificates
 
-# Set working directory inside container
 WORKDIR /app
-
-# Copy the prebuilt binary into the container
 COPY app .
+RUN chmod +x ./app
 
-# Expose your app port
 EXPOSE 8080
-
-# Run the app when the container starts
 CMD ["./app"]
