@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -214,10 +213,8 @@ func FinishLoginHandler(repo storage.Repository, wa *webauthn.WebAuthn) fiber.Ha
 
 		cred, err := wa.FinishLogin(webUser, sessionData, req)
 		if err != nil {
-			fmt.Println("FinishLogin Error:", err) // Add this for debugging!
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Login failed", "details": err.Error()})
 		}
-		
 
 		updateCred := &models.WebAuthnCredential{
 			CredentialID: base64.StdEncoding.EncodeToString(cred.ID),
