@@ -144,6 +144,7 @@ func FinishRegistrationHandler(repo storage.Repository, wa *webauthn.WebAuthn) f
 			AAGUID:          base64.StdEncoding.EncodeToString(cred.Authenticator.AAGUID),
 			SignCount:       cred.Authenticator.SignCount,
 			CloneWarning:    cred.Authenticator.CloneWarning,
+			BackupEligible:  cred.Flags.BackupEligible,	
 		}
 		_ = repo.StoreCredential(&newCred)
 

@@ -49,6 +49,12 @@ func (u *WebAuthnUser) WebAuthnCredentials() []webauthn.Credential {
 				SignCount:    c.SignCount,
 				CloneWarning: c.CloneWarning,
 			},
+			Flags: webauthn.CredentialFlags{
+               
+                BackupEligible: c.BackupEligible,
+             
+            },
+
 		})
 	}
 
