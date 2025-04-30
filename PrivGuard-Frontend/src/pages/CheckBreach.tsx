@@ -2,7 +2,7 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import axios from "axios";
-import { AlertTriangle, Shield, Search, MailCheck, Info, Lock } from "lucide-react";
+import { AlertTriangle, Shield, Search, MailCheck, Info, Lock, ExternalLink } from "lucide-react";
 import EmailSearchForm from "@/components/breach-checker/EmailSearchForm";
 import BreachSummary from "@/components/breach-checker/BreachSummary";
 import BreachDetailsTabs from "@/components/breach-checker/BreachDetailsTabs";
@@ -27,16 +27,16 @@ export default function CheckBreaches() {
      */
     const handleCheck = async () => {
         if (!email) return;
-        
+
         // Reset states before new search
         setHasSearched(true);
         setLoading(true);
         setBreachData(null);
         setError("");
-        
+
         try {
             const response = await axios.get(`https://api.xposedornot.com/v1/breach-analytics?email=${email}`);
-            
+
             if (response.data.Error === "Not found") {
                 setBreachData(null);
             } else {
@@ -155,30 +155,47 @@ export default function CheckBreaches() {
                         </CardHeader>
                         <CardContent>
                             <div className="grid gap-6 md:grid-cols-3">
-                                <InfoCard 
+                                <InfoCard
                                     icon={<Search className="h-5 w-5 text-primary" />}
                                     title="What We Check"
-                                    description="Our database contains information from thousands of confirmed data breaches across the internet."
+                                    description="We use XposedOrNot API to access information from thousands of confirmed data breaches across the internet."
                                 />
-                                <InfoCard 
+                                <InfoCard
                                     icon={<MailCheck className="h-5 w-5 text-primary" />}
                                     title="Email Protection"
                                     description="Your email is securely transmitted and never stored in our systems after your search is complete."
                                 />
-                                <InfoCard 
+                                <InfoCard
                                     icon={<Shield className="h-5 w-5 text-primary" />}
                                     title="Stay Protected"
                                     description="If your details are found in a breach, we recommend changing passwords and enabling 2FA where possible."
                                 />
                             </div>
                         </CardContent>
-                        <CardFooter className="flex justify-center border-t px-6 py-4 text-sm text-muted-foreground">
-                            Data sourced from public breach notifications and security researchers. Last database update: April 2025
+                        <CardFooter className="flex flex-col items-center border-t px-6 py-4">
+                            <div className="mb-6 flex flex-col items-center">
+                                <p className="text-lg font-medium text-primary italic mb-4 text-center">
+                                    "Empowering digital safety through breach transparency"
+                                </p>
+
+                                <a
+                                    href="https://xposedornot.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 px-4 rounded-md transition-colors duration-300"
+                                >
+                                    Visit XposedOrNot
+                                    <ExternalLink className="h-4 w-4" />
+                                </a>
+                            </div>
+                            <div className="text-sm text-muted-foreground text-center">
+                                Data sourced from XposedOrNot community edition.
+                            </div>
                         </CardFooter>
                     </Card>
                 </motion.div>
             </div>
-        </div>
+        </div >
     );
 }
 
